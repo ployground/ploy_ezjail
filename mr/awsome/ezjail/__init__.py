@@ -130,6 +130,60 @@ class Instance(PlainInstance):
         log.info("Instance terminated")
 
 
+class ZFS_FS(object):
+    def __init__(self, zfs, name, config):
+        self.name = name
+        self.zfs = zfs
+        self.config = config
+        mp_args = "zfs get -Hp -o property,value mountpoint '%s'" % self['path']
+        rc, rout, rerr = self.zfs.master._exec(mp_args)
+        if rc != 0 and self.config.get('create', False):
+            args = ['zfs', 'create']
+            for k, v in self.config.items():
+                if not k.startswith('set-'):
+                    continue
+                args.append("-o '%s=%s'" % (k[4:], v))
+            args.append(self['path'])
+            rc, out, err = self.zfs.master._exec(' '.join(args))
+            if rc != 0:
+                log.error(
+                    "Couldn't create zfs filesystem '%s' at '%s'." %(
+                        self.name, self['path']))
+                log.error(err)
+                sys.exit(1)
+        rc, out, err = self.zfs.master._exec(mp_args)
+        if rc == 0:
+            info = out.strip().split('\t')
+            assert info[0] == 'mountpoint'
+            self.mountpoint = info[1]
+            return
+        log.error(
+            "Trying to use non existing zfs filesystem '%s' at '%s'." % (
+                self.name, self['path']))
+        sys.exit(1)
+
+    def __getitem__(self, key):
+        value = self.config[key]
+        if key == 'path':
+            return value.format(zfs=self.zfs)
+        return value
+
+    def __str__(self):
+        return self.mountpoint
+
+
+class ZFS(object):
+    def __init__(self, master):
+        self.master = master
+        self.config = self.master.main_config.get('ez-zfs', {})
+        self._cache = {}
+
+    def __getitem__(self, key):
+        if key not in self._cache:
+            self._cache[key] = ZFS_FS(self, key, self.config[key])
+        return self._cache[key]
+
+
 class Master(BaseMaster):
     sectiongroupname = 'ez-instance'
     instance_class = Instance
@@ -140,6 +194,10 @@ class Master(BaseMaster):
         self.instance.sectiongroupname = 'ez-master'
         self.instances[self.id] = self.instance
         self.debug = self.master_config.get('debug-commands', False)
+
+    @lazy
+    def zfs(self):
+        return ZFS(self)
 
     @lazy
     def binary_prefix(self):
@@ -307,6 +365,10 @@ def get_massagers():
     massagers.extend([
         BooleanMassager(sectiongroupname, 'sudo'),
         BooleanMassager(sectiongroupname, 'debug-commands')])
+
+    sectiongroupname = 'ez-zfs'
+    massagers.extend([
+        BooleanMassager(sectiongroupname, 'create')])
 
     return massagers
 
