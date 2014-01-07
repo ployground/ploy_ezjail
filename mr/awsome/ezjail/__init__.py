@@ -3,6 +3,7 @@ from mr.awsome.common import BaseMaster
 from mr.awsome.plain import Instance as PlainInstance
 import logging
 import sys
+import time
 
 
 log = logging.getLogger('mr.awsome.ezjail')
@@ -31,8 +32,9 @@ class Instance(PlainInstance):
         info = out.split()
         return info[1]
 
-    def _status(self):
-        jails = self.master.ezjail_admin('list')
+    def _status(self, jails=None):
+        if jails is None:
+            jails = self.master.ezjail_admin('list')
         if self.id not in jails:
             return 'unavailable'
         jail = jails[self.id]
@@ -103,7 +105,8 @@ class Instance(PlainInstance):
         log.info("Instance stopped")
 
     def terminate(self):
-        status = self._status()
+        jails = self.master.ezjail_admin('list')
+        status = self._status(jails)
         if self.config.get('no-terminate', False):
             log.error("Instance '%s' is configured not to be terminated.", self.id)
             return
@@ -113,6 +116,15 @@ class Instance(PlainInstance):
         if status == 'running':
             log.info("Stopping instance '%s'", self.id)
             self.master.ezjail_admin('stop', name=self.id)
+        if status != 'stopped':
+            log.info('Waiting for jail to stop')
+            while status != 'stopped':
+                jails = self.master.ezjail_admin('list')
+                status = self._status(jails)
+                sys.stdout.write('.')
+                sys.stdout.flush()
+                time.sleep(1)
+            print
         log.info("Terminating instance '%s'", self.id)
         self.master.ezjail_admin('delete', name=self.id)
         log.info("Instance terminated")
