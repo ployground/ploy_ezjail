@@ -167,22 +167,26 @@ class Master(BaseMaster):
             sys.exit(1)
         return ssh_info['client']
 
-    def _exec(self, cmd, debug=False):
+    def _exec(self, cmd, debug=False, stdin=None):
         if debug:
             log.info(cmd)
         chan = self.conn.get_transport().open_session()
-        chan.exec_command(cmd)
+        if stdin is not None:
+            rin = chan.makefile('wb', -1)
         rout = chan.makefile('rb', -1)
         rerr = chan.makefile_stderr('rb', -1)
-        rc = chan.recv_exit_status()
+        chan.exec_command(cmd)
+        if stdin is not None:
+            rin.write(stdin)
+            rin.flush()
+            chan.shutdown_write()
         out = rout.read()
         err = rerr.read()
+        rc = chan.recv_exit_status()
         if debug and out.strip():
-            for line in out.split('\n'):
-                log.info(line)
+            log.info(out)
         if debug and err.strip():
-            for line in err.split('\n'):
-                log.error(line)
+            log.error(err)
         return rc, out, err
 
     def _ezjail_admin(self, *args):
