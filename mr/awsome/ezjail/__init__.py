@@ -1,5 +1,6 @@
 from lazy import lazy
 from mr.awsome.common import BaseMaster
+from mr.awsome.config import BaseMassager, value_asbool
 from mr.awsome.plain import Instance as PlainInstance
 import logging
 import sys
@@ -58,7 +59,8 @@ class Instance(PlainInstance):
         log.info("Instance running.")
 
     def start(self, overrides=None):
-        status = self._status()
+        jails = self.master.ezjail_admin('list')
+        status = self._status(jails)
         create = False
         if status == 'unavailable':
             create = True
@@ -66,6 +68,21 @@ class Instance(PlainInstance):
             if 'ip' not in self.config:
                 log.error("No IP address set for instance '%s'", self.id)
                 sys.exit(1)
+            mounts = []
+            for mount in self.config.get('mounts', []):
+                src = mount['src'].format(
+                    zfs=self.master.zfs,
+                    name=self.id)
+                dst = mount['dst'].format(
+                    name=self.id)
+                create = mount.get('create', False)
+                mounts.append(dict(src=src, dst=dst, create=create))
+                if create:
+                    rc, out, err = self.master._exec("mkdir -p '%s'" % src)
+                    if rc != 0:
+                        log.error("Couldn't create source directory '%s' for mountpoint '%s'." % src, mount['src'])
+                        log.error(err)
+                        sys.exit(1)
             try:
                 self.master.ezjail_admin(
                     'create',
@@ -76,11 +93,26 @@ class Instance(PlainInstance):
                 for line in e.args[0].split('\n'):
                     log.error(line)
                 sys.exit(1)
-            status = self._status()
+            jails = self.master.ezjail_admin('list')
+            status = self._status(jails)
         if status != 'stopped':
             log.info("Instance state: %s", status)
             log.info("Instance already started")
             return True
+        if create:
+            jail = jails.get(self.id)
+            if mounts:
+                log.info("Setting up mount points")
+                fstab = ['# mount points from mr.awsome']
+                for mount in mounts:
+                    if mount['create']:
+                        self.master._exec(
+                            "mkdir -p '%s/%s'" % (jail['root'], mount['dst']))
+                    fstab.append('%s %s/%s nullfs rw 0 0' % (mount['src'], jail['root'], mount['dst']))
+                fstab.append('')
+                rc, out, err = self.master._exec(
+                    "cat - >> '/etc/fstab.%s'" % self.id,
+                    stdin='\n'.join(fstab))
         log.info("Starting instance '%s'", self.id)
         try:
             self.master.ezjail_admin(
@@ -343,6 +375,27 @@ class Master(BaseMaster):
             raise ValueError("Unknown command '%s'" % command)
 
 
+class MountsMassager(BaseMassager):
+    def __call__(self, main_config, sectionname):
+        value = main_config[self.sectiongroupname][sectionname][self.key]
+        mounts = []
+        for line in value.split('\n'):
+            mount_options = line.split()
+            if not len(mount_options):
+                continue
+            options = {}
+            for mount_option in mount_options:
+                (key, value) = mount_option.split('=')
+                (key, value) = (key.strip(), value.strip())
+                if key == 'create':
+                    value = value_asbool(value)
+                    if value is None:
+                        raise ValueError("Unknown value %s for option %s in %s of %s:%s." % (value, key, self.key, self.sectiongroupname, sectionname))
+                options[key] = value
+            mounts.append(options)
+        return tuple(mounts)
+
+
 def get_massagers():
     from mr.awsome.config import BooleanMassager
     from mr.awsome.plain import get_massagers as plain_massagers
@@ -357,6 +410,7 @@ def get_massagers():
     for klass, name in common:
         massagers.append(klass(sectiongroupname, name))
     massagers.extend([
+        MountsMassager(sectiongroupname, 'mounts'),
         BooleanMassager(sectiongroupname, 'no-terminate')])
 
     sectiongroupname = 'ez-master'
