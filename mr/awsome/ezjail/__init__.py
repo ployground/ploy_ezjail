@@ -61,28 +61,11 @@ class Instance(PlainInstance):
     def start(self, overrides=None):
         jails = self.master.ezjail_admin('list')
         status = self._status(jails)
-        create = False
         if status == 'unavailable':
-            create = True
             log.info("Creating instance '%s'", self.id)
             if 'ip' not in self.config:
                 log.error("No IP address set for instance '%s'", self.id)
                 sys.exit(1)
-            mounts = []
-            for mount in self.config.get('mounts', []):
-                src = mount['src'].format(
-                    zfs=self.master.zfs,
-                    name=self.id)
-                dst = mount['dst'].format(
-                    name=self.id)
-                create = mount.get('create', False)
-                mounts.append(dict(src=src, dst=dst, create=create))
-                if create:
-                    rc, out, err = self.master._exec("mkdir -p '%s'" % src)
-                    if rc != 0:
-                        log.error("Couldn't create source directory '%s' for mountpoint '%s'." % src, mount['src'])
-                        log.error(err)
-                        sys.exit(1)
             try:
                 self.master.ezjail_admin(
                     'create',
@@ -99,20 +82,37 @@ class Instance(PlainInstance):
             log.info("Instance state: %s", status)
             log.info("Instance already started")
             return True
-        if create:
+        mounts = []
+        for mount in self.config.get('mounts', []):
+            src = mount['src'].format(
+                zfs=self.master.zfs,
+                name=self.id)
+            dst = mount['dst'].format(
+                name=self.id)
+            create_mount = mount.get('create', False)
+            mounts.append(dict(src=src, dst=dst))
+            if create_mount:
+                rc, out, err = self.master._exec("mkdir -p '%s'" % src)
+                if rc != 0:
+                    log.error("Couldn't create source directory '%s' for mountpoint '%s'." % src, mount['src'])
+                    log.error(err)
+                    sys.exit(1)
+        if mounts:
             jail = jails.get(self.id)
-            if mounts:
-                log.info("Setting up mount points")
-                fstab = ['# mount points from mr.awsome']
-                for mount in mounts:
-                    if mount['create']:
-                        self.master._exec(
-                            "mkdir -p '%s/%s'" % (jail['root'], mount['dst']))
-                    fstab.append('%s %s/%s nullfs rw 0 0' % (mount['src'], jail['root'], mount['dst']))
-                fstab.append('')
-                rc, out, err = self.master._exec(
-                    "cat - >> '/etc/fstab.%s'" % self.id,
-                    stdin='\n'.join(fstab))
+            jail_fstab = '/etc/fstab.%s' % self.id
+            log.info("Setting up mount points")
+            rc, out, err = self.master._exec("head -n 1 %s" % jail_fstab)
+            fstab = out.split('\n')
+            fstab = fstab[:1]
+            fstab.append('# mount points from mr.awsome')
+            for mount in mounts:
+                self.master._exec(
+                    "mkdir -p '%s/%s'" % (jail['root'], mount['dst']))
+                fstab.append('%s %s/%s nullfs rw 0 0' % (mount['src'], jail['root'], mount['dst']))
+            fstab.append('')
+            rc, out, err = self.master._exec(
+                "cat - > %s" % jail_fstab,
+                stdin='\n'.join(fstab))
         log.info("Starting instance '%s'", self.id)
         try:
             self.master.ezjail_admin(
