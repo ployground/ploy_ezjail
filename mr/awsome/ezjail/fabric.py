@@ -56,6 +56,7 @@ def bootstrap(**kwargs):
         realmem = run('sysctl -n hw.realmem').strip()
         realmem = float(realmem) / 1024 / 1024
         realmem = 2 ** int(math.ceil(math.log(realmem, 2)))
+        interfaces = run('ifconfig -l').strip()
     cd_device = env.server.config.get('bootstrap-cd-device', 'cd0')
     if '/dev/{dev} on /rw/cdrom'.format(dev=cd_device) not in mounts:
         run('test -e /dev/{dev} && mount_cd9660 /dev/{dev} /cdrom || true'.format(dev=cd_device))
@@ -78,8 +79,9 @@ def bootstrap(**kwargs):
             if install_device.startswith(sysctl_device):
                 devices.remove(sysctl_device)
     devices = env.server.config.get('bootstrap-system-devices', ' '.join(devices)).split()
-    print "Found the following disk devices on the system:\n    %s" % ' '.join(sysctl_devices)
-    if not yesno("Continuing will destroy the existing data on the following devices:\n%s\nContinue?" % ' '.join(devices)):
+    print "\nFound the following disk devices on the system:\n    %s" % ' '.join(sysctl_devices)
+    print "\nFound the following network interfaces, now is your chance to update your rc.conf accordingly!\n    %s" % interfaces
+    if not yesno("\nContinuing will destroy the existing data on the following devices:\n    %s\n\nContinue?" % ' '.join(devices)):
         return
     zfsinstall = env.server.config.get('bootstrap-zfsinstall')
     if zfsinstall:
