@@ -43,8 +43,11 @@ def bootstrap(**kwargs):
             if not os.path.exists(pub_key):
                 print "Public key '%s' for '%s' missing." % (pub_key, ssh_key)
                 sys.exit(1)
-    # default ssh settings for mfsbsd
-    env.server.config['fingerprint'] = '02:2e:b4:dd:c3:8a:b7:7b:ba:b2:4a:f0:ab:13:f4:2d'
+    # default ssh settings for mfsbsd with possible overwrite by bootstrap-fingerprint
+    fingerprint = env.server.config.get(
+        'bootstrap-fingerprint',
+        '02:2e:b4:dd:c3:8a:b7:7b:ba:b2:4a:f0:ab:13:f4:2d')
+    env.server.config['fingerprint'] = fingerprint
     env.server.config['password-fallback'] = True
     env.server.config['password'] = 'mfsroot'
     # allow overwrites from the commandline
