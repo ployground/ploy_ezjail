@@ -1,5 +1,5 @@
 from lazy import lazy
-from mr.awsome.common import BaseMaster
+from mr.awsome.common import BaseMaster, StartupScriptMixin
 from mr.awsome.config import BaseMassager, value_asbool
 from mr.awsome.plain import Instance as PlainInstance
 import logging
@@ -14,7 +14,35 @@ class EzjailError(Exception):
     pass
 
 
-class Instance(PlainInstance):
+rc_startup = """#!/bin/sh
+#
+# BEFORE: DAEMON
+# PROVIDE: mr.awsome.startup_script
+#
+# mr.awsome startup script
+
+. /etc/rc.subr
+
+name=mr.awsome.startup_script
+start_cmd=startup
+
+startup() {
+
+# Remove traces of ourself
+# N.B.: Do NOT rm $0, it points to /etc/rc
+##########################
+  rm -f "/etc/rc.d/mr.awsome.startup_script"
+
+  test -e /etc/startup_script && /etc/startup_script || true
+  test -e /etc/startup_script && chmod 0600 /etc/startup_script
+
+}
+
+run_rc_command "$1"
+"""
+
+
+class Instance(PlainInstance, StartupScriptMixin):
     sectiongroupname = 'ez-instance'
 
     def get_host(self):
@@ -61,7 +89,9 @@ class Instance(PlainInstance):
     def start(self, overrides=None):
         jails = self.master.ezjail_admin('list')
         status = self._status(jails)
+        startup_script = None
         if status == 'unavailable':
+            startup_script = self.startup_script(overrides=overrides)
             log.info("Creating instance '%s'", self.id)
             if 'ip' not in self.config:
                 log.error("No IP address set for instance '%s'", self.id)
@@ -77,6 +107,33 @@ class Instance(PlainInstance):
                     log.error(line)
                 sys.exit(1)
             jails = self.master.ezjail_admin('list')
+            jail = jails.get(self.id)
+            startup_dest = '%s/etc/startup_script' % jail['root']
+            rc, out, err = self.master._exec(
+                "cat - > %s" % startup_dest,
+                stdin=startup_script)
+            if rc != 0:
+                log.error("Startup script creation failed.")
+                log.error(err)
+                sys.exit(1)
+            rc, out, err = self.master._exec("chmod 0700 %s" % startup_dest)
+            if rc != 0:
+                log.error("Startup script chmod failed.")
+                log.error(err)
+                sys.exit(1)
+            rc_startup_dest = '%s/etc/rc.d/mr.awsome.startup_script' % jail['root']
+            rc, out, err = self.master._exec(
+                "cat - > %s" % rc_startup_dest,
+                stdin=rc_startup)
+            if rc != 0:
+                log.error("Startup rc script creation failed.")
+                log.error(err)
+                sys.exit(1)
+            rc, out, err = self.master._exec("chmod 0700 %s" % rc_startup_dest)
+            if rc != 0:
+                log.error("Startup rc script chmod failed.")
+                log.error(err)
+                sys.exit(1)
             status = self._status(jails)
         if status != 'stopped':
             log.info("Instance state: %s", status)
@@ -113,7 +170,10 @@ class Instance(PlainInstance):
             rc, out, err = self.master._exec(
                 "cat - > %s" % jail_fstab,
                 stdin='\n'.join(fstab))
-        log.info("Starting instance '%s'", self.id)
+        if startup_script:
+            log.info("Starting instance '%s' with startup script, this can take a while.", self.id)
+        else:
+            log.info("Starting instance '%s'", self.id)
         try:
             self.master.ezjail_admin(
                 'start',
@@ -403,6 +463,7 @@ class MountsMassager(BaseMassager):
 
 def get_massagers():
     from mr.awsome.config import BooleanMassager
+    from mr.awsome.config import StartupScriptMassager
     from mr.awsome.plain import get_massagers as plain_massagers
 
     massagers = []
@@ -416,7 +477,8 @@ def get_massagers():
         massagers.append(klass(sectiongroupname, name))
     massagers.extend([
         MountsMassager(sectiongroupname, 'mounts'),
-        BooleanMassager(sectiongroupname, 'no-terminate')])
+        BooleanMassager(sectiongroupname, 'no-terminate'),
+        StartupScriptMassager(sectiongroupname, 'startup_script')])
 
     sectiongroupname = 'ez-master'
     for klass, name in common:
