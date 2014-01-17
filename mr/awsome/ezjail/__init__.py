@@ -3,6 +3,7 @@ from mr.awsome.common import BaseMaster, StartupScriptMixin
 from mr.awsome.config import BaseMassager, value_asbool
 from mr.awsome.plain import Instance as PlainInstance
 import logging
+import re
 import sys
 import time
 
@@ -44,6 +45,14 @@ run_rc_command "$1"
 
 class Instance(PlainInstance, StartupScriptMixin):
     sectiongroupname = 'ez-instance'
+
+    _id_regexp = re.compile('^[a-zA-Z0-9_]+$')
+
+    def validate_id(self, sid):
+        if self._id_regexp.match(sid) is None:
+            log.error("Invalid instance name '%s'. An easy jail instance name may only contain letters, numbers and underscores." % sid)
+            sys.exit(1)
+        return sid
 
     def get_host(self):
         return self.config.get('host', self.config['ip'])
