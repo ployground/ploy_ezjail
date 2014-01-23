@@ -65,7 +65,7 @@ def bootstrap(**kwargs):
         run('test -e /dev/{dev} && mount_cd9660 /dev/{dev} /cdrom || true'.format(dev=cd_device))
     usb_device = env.server.config.get('bootstrap-usb-device', 'da0a')
     if '/dev/{dev} on /rw/media'.format(dev=usb_device) not in mounts:
-        run('test -e /dev/{dev} && mount /dev/{dev} /media || true'.format(dev=usb_device))
+        run('test -e /dev/{dev} && mount -o ro /dev/{dev} /media || true'.format(dev=usb_device))
     bsd_url = env.server.config.get('bootstrap-bsd-url')
     if not bsd_url:
         with settings(hide('output', 'warnings'), warn_only=True):
