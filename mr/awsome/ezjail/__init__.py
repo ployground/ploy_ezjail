@@ -166,6 +166,7 @@ class Instance(PlainInstance, StartupScriptMixin):
         if mounts:
             jail = jails.get(self.id)
             jail_fstab = '/etc/fstab.%s' % self.id
+            jail_root = jail['root'].rstrip('/')
             log.info("Setting up mount points")
             rc, out, err = self.master._exec("head -n 1 %s" % jail_fstab)
             fstab = out.split('\n')
@@ -173,8 +174,8 @@ class Instance(PlainInstance, StartupScriptMixin):
             fstab.append('# mount points from mr.awsome')
             for mount in mounts:
                 self.master._exec(
-                    "mkdir -p '%s/%s'" % (jail['root'], mount['dst']))
-                fstab.append('%s %s/%s nullfs rw 0 0' % (mount['src'], jail['root'], mount['dst']))
+                    "mkdir -p '%s%s'" % (jail_root, mount['dst']))
+                fstab.append('%s %s%s nullfs rw 0 0' % (mount['src'], jail_root, mount['dst']))
             fstab.append('')
             rc, out, err = self.master._exec(
                 "cat - > %s" % jail_fstab,
