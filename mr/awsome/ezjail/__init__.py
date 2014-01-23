@@ -156,7 +156,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             dst = mount['dst'].format(
                 name=self.id)
             create_mount = mount.get('create', False)
-            mounts.append(dict(src=src, dst=dst))
+            mounts.append(dict(src=src, dst=dst, ro=mount.get('ro', False)))
             if create_mount:
                 rc, out, err = self.master._exec("mkdir -p '%s'" % src)
                 if rc != 0:
@@ -175,7 +175,11 @@ class Instance(PlainInstance, StartupScriptMixin):
             for mount in mounts:
                 self.master._exec(
                     "mkdir -p '%s%s'" % (jail_root, mount['dst']))
-                fstab.append('%s %s%s nullfs rw 0 0' % (mount['src'], jail_root, mount['dst']))
+                if mount['ro']:
+                    mode = 'ro'
+                else:
+                    mode = 'rw'
+                fstab.append('%s %s%s nullfs %s 0 0' % (mount['src'], jail_root, mount['dst'], mode))
             fstab.append('')
             rc, out, err = self.master._exec(
                 "cat - > %s" % jail_fstab,
@@ -463,6 +467,10 @@ class MountsMassager(BaseMassager):
                 (key, value) = mount_option.split('=')
                 (key, value) = (key.strip(), value.strip())
                 if key == 'create':
+                    value = value_asbool(value)
+                    if value is None:
+                        raise ValueError("Unknown value %s for option %s in %s of %s:%s." % (value, key, self.key, self.sectiongroupname, sectionname))
+                if key == 'ro':
                     value = value_asbool(value)
                     if value is None:
                         raise ValueError("Unknown value %s for option %s in %s of %s:%s." % (value, key, self.key, self.sectiongroupname, sectionname))
