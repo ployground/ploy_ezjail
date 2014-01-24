@@ -86,7 +86,8 @@ class Instance(PlainInstance, StartupScriptMixin):
         raise EzjailError("Don't know how to handle mounted but not running jail '%s'" % self.id)
 
     def status(self):
-        status = self._status()
+        jails = self.master.ezjail_admin('list')
+        status = self._status(jails)
         if status == 'unavailable':
             log.info("Instance '%s' unavailable", self.id)
             return
@@ -94,6 +95,8 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instance state: %s", status)
             return
         log.info("Instance running.")
+        log.info("Instances jail id %s" % jails[self.id]['jid'])
+        log.info("Instances jail ip %s" % jails[self.id]['ip'])
 
     def start(self, overrides=None):
         jails = self.master.ezjail_admin('list')
