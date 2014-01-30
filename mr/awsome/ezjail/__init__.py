@@ -303,7 +303,6 @@ class Master(BaseMaster):
         self.instance.sectiongroupname = 'ez-master'
         self.instances[self.id] = self.instance
         self.debug = self.master_config.get('debug-commands', False)
-        self._conn = None
 
     @lazy
     def zfs(self):
@@ -322,22 +321,7 @@ class Master(BaseMaster):
 
     @property
     def conn(self):
-        if self._conn is not None:
-            if self._conn.get_transport() is not None:
-                return self._conn
-        try:
-            from paramiko import SSHException
-            SSHException  # shutup pyflakes
-        except ImportError:
-            from ssh import SSHException
-        try:
-            ssh_info = self.instance.init_ssh_key()
-        except SSHException, e:
-            log.error("Couldn't connect to vz-master:%s." % self.id)
-            log.error(unicode(e))
-            sys.exit(1)
-        self._conn = ssh_info['client']
-        return self._conn
+        return self.instance.conn
 
     def _exec(self, cmd, debug=False, stdin=None):
         if debug:
