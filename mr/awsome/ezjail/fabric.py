@@ -25,7 +25,7 @@ def bootstrap(**kwargs):
             '../roles/common/files/pkg.conf',
             '/mnt/usr/local/etc/pkg.conf'),
         (
-            '../roles/common/files/FreeBSD.conf',
+            '../roles/common/templates/FreeBSD.conf',
             '/mnt/usr/local/etc/pkg/repos/FreeBSD.conf')]
     for necessary_file in necessary_files:
         if not os.path.exists(necessary_file[0]):
