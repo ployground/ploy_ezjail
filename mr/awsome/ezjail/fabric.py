@@ -28,8 +28,9 @@ def bootstrap(**kwargs):
             '../roles/common/files/FreeBSD.conf',
             '/mnt/usr/local/etc/pkg/repos/FreeBSD.conf')]
     for necessary_file in necessary_files:
-        if not os.path.exists(necessary_file[0]):
-            print "You have to create %s first." % necessary_file[0]
+        required_path = os.path.join(env['lcwd'], necessary_file[0])
+        if not os.path.exists(required_path):
+            print "You have to create %s first." % required_path
             sys.exit(1)
     ssh_keys = set([
         ('ssh_host_key', '-t rsa1 -b 1024'),
