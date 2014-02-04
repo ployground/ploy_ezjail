@@ -28,8 +28,9 @@ def bootstrap(**kwargs):
             '../roles/common/files/FreeBSD.conf',
             '/mnt/usr/local/etc/pkg/repos/FreeBSD.conf')]
     for necessary_file in necessary_files:
-        if not os.path.exists(necessary_file[0]):
-            print "You have to create %s first." % necessary_file[0]
+        required_path = os.path.join(env['lcwd'], necessary_file[0])
+        if not os.path.exists(required_path):
+            print "You have to create %s first." % required_path
             sys.exit(1)
     ssh_keys = set([
         ('ssh_host_key', '-t rsa1 -b 1024'),
@@ -129,8 +130,8 @@ def bootstrap(**kwargs):
     run('mkdir -p /mnt/root/.ssh && chmod 0600 /mnt/root/.ssh')
     run('cp /etc/resolv.conf /mnt/etc/resolv.conf')
     run('mkdir -p /mnt/usr/local/etc/pkg/repos')
-    for necessary_file in necessary_files:
-        put(*necessary_file)
+    for source_path, target_path in necessary_files:
+        put(os.path.join(env['lcwd'], source_path), target_path)
     # install pkg, the tarball is also used for the ezjail flavour in bootstrap_ezjail
     run('mkdir -p /mnt/var/cache/pkg/All')
     run('fetch -o /mnt/var/cache/pkg/All/pkg.txz http://pkg.freebsd.org/freebsd:9:x86:64/latest/Latest/pkg.txz')
