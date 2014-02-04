@@ -130,8 +130,8 @@ def bootstrap(**kwargs):
     run('mkdir -p /mnt/root/.ssh && chmod 0600 /mnt/root/.ssh')
     run('cp /etc/resolv.conf /mnt/etc/resolv.conf')
     run('mkdir -p /mnt/usr/local/etc/pkg/repos')
-    for necessary_file in necessary_files:
-        put(*necessary_file)
+    for source_path, target_path in necessary_files:
+        put(os.path.join(env['lcwd'], source_path), target_path)
     # install pkg, the tarball is also used for the ezjail flavour in bootstrap_ezjail
     run('mkdir -p /mnt/var/cache/pkg/All')
     run('fetch -o /mnt/var/cache/pkg/All/pkg.txz http://pkg.freebsd.org/freebsd:9:x86:64/latest/Latest/pkg.txz')
