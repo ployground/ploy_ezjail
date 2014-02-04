@@ -9,24 +9,12 @@ def bootstrap(**kwargs):
     import sys
     env.shell = '/bin/sh -c'
     necessary_files = [
-        (
-            '../roles/common/files/identity.pub',
-            '/mnt/root/.ssh/authorized_keys'),
-        (
-            'rc.conf',
-            '/mnt/etc/rc.conf'),
-        (
-            'sshd_config',
-            '/mnt/etc/ssh/sshd_config'),
-        (
-            '../roles/common/files/make.conf',
-            '/mnt/etc/make.conf'),
-        (
-            '../roles/common/files/pkg.conf',
-            '/mnt/usr/local/etc/pkg.conf'),
-        (
-            '../roles/common/files/FreeBSD.conf',
-            '/mnt/usr/local/etc/pkg/repos/FreeBSD.conf')]
+        ('identity.pub', '/mnt/root/.ssh/authorized_keys'),
+        ('rc.conf', '/mnt/etc/rc.conf'),
+        ('sshd_config', '/mnt/etc/ssh/sshd_config'),
+        ('make.conf', '/mnt/etc/make.conf'),
+        ('pkg.conf', '/mnt/usr/local/etc/pkg.conf'),
+        ('FreeBSD.conf', '/mnt/usr/local/etc/pkg/repos/FreeBSD.conf')]
     for necessary_file in necessary_files:
         required_path = os.path.join(env['lcwd'], necessary_file[0])
         if not os.path.exists(required_path):
