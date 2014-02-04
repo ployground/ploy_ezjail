@@ -26,7 +26,7 @@ def bootstrap(**kwargs):
         ('ssh_host_dsa_key', '-t dsa'),
         ('ssh_host_ecdsa_key', '-t ecdsa')])
     for ssh_key_info in list(ssh_keys):
-        ssh_key = ssh_key_info[0]
+        ssh_key = os.path.join(env['lcwd'], ssh_key_info[0])
         if os.path.exists(ssh_key):
             pub_key = '%s.pub' % ssh_key
             if not os.path.exists(pub_key):
@@ -136,10 +136,12 @@ def bootstrap(**kwargs):
     run('echo autoboot_delay=%s >> /mnt/boot/loader.conf' % autoboot_delay)
     # ssh host keys
     for ssh_key, ssh_keygen_args in ssh_keys:
-        if os.path.exists(ssh_key):
+        ssh_key_path = os.path.join(env['lcwd'], ssh_key)
+        if os.path.exists(ssh_key_path):
             pub_key = '%s.pub' % ssh_key
-            put(ssh_key, '/mnt/etc/ssh/%s' % ssh_key, mode=0600)
-            put(pub_key, '/mnt/etc/ssh/%s' % pub_key, mode=0644)
+            pub_key_path = os.path.join(env['lcwd'], pub_key)
+            put(ssh_key_path, '/mnt/etc/ssh/%s' % ssh_key, mode=0600)
+            put(pub_key_path, '/mnt/etc/ssh/%s' % pub_key, mode=0644)
         else:
             run("ssh-keygen %s -f /mnt/etc/ssh/%s -N ''" % (ssh_keygen_args, ssh_key))
     fingerprint = run("ssh-keygen -lf /mnt/etc/ssh/ssh_host_rsa_key")
