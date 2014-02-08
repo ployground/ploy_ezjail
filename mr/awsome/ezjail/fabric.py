@@ -8,18 +8,19 @@ def bootstrap(**kwargs):
     import os
     import sys
     env.shell = '/bin/sh -c'
-    necessary_files = [
-        ('identity.pub', '/mnt/root/.ssh/authorized_keys'),
-        ('rc.conf', '/mnt/etc/rc.conf'),
-        ('sshd_config', '/mnt/etc/ssh/sshd_config'),
-        ('make.conf', '/mnt/etc/make.conf'),
-        ('pkg.conf', '/mnt/usr/local/etc/pkg.conf'),
-        ('FreeBSD.conf', '/mnt/usr/local/etc/pkg/repos/FreeBSD.conf')]
-    for necessary_file in necessary_files:
-        required_path = os.path.join(env['lcwd'], necessary_file[0])
-        if not os.path.exists(required_path):
-            print "You have to create %s first." % required_path
+    necessary_files = {
+        'identity.pub': {'remote': '/mnt/root/.ssh/authorized_keys'},
+        'rc.conf': {'remote': '/mnt/etc/rc.conf'},
+        'sshd_config': {'remote': '/mnt/etc/ssh/sshd_config'},
+        'make.conf': {'remote': '/mnt/etc/make.conf'},
+        'pkg.conf': {'remote': '/mnt/usr/local/etc/pkg.conf'},
+        'FreeBSD.conf': {'remote': '/mnt/usr/local/etc/pkg/repos/FreeBSD.conf'}}
+    for key, info in necessary_files.items():
+        local_path = os.path.join(env['lcwd'], key)
+        if not os.path.exists(local_path):
+            print "You have to create %s first." % local_path
             sys.exit(1)
+        info['local'] = local_path
     ssh_keys = set([
         ('ssh_host_key', '-t rsa1 -b 1024'),
         ('ssh_host_rsa_key', '-t rsa'),
@@ -72,9 +73,23 @@ def bootstrap(**kwargs):
                 devices.remove(sysctl_device)
     devices = env.server.config.get('bootstrap-system-devices', ' '.join(devices)).split()
     print "\nFound the following disk devices on the system:\n    %s" % ' '.join(sysctl_devices)
-    print "\nFound the following network interfaces, now is your chance to update your rc.conf accordingly!\n    %s" % interfaces
+    real_interfaces = [x for x in interfaces.split() if not x.startswith('lo')]
+    if len(real_interfaces):
+        print "\nFound the following network interfaces, now is your chance to update your rc.conf accordingly!\n    %s" % ' '.join(real_interfaces)
+        first_interface = real_interfaces[0]
+    else:
+        print "\nWARNING! Found no suitable network interface!"
+        first_interface = None
     if not yesno("\nContinuing will destroy the existing data on the following devices:\n    %s\n\nContinue?" % ' '.join(devices)):
         return
+    if first_interface is not None:
+        ifconfig = 'ifconfig_%s' % first_interface
+        for line in open(necessary_files['rc.conf']['local']):
+            if line.strip().startswith(ifconfig):
+                break
+        else:
+            if not yesno("\nDidn't find an '%s' setting in rc.conf. You sure that you want to continue?" % ifconfig):
+                return
     zfsinstall = env.server.config.get('bootstrap-zfsinstall')
     if zfsinstall:
         put(zfsinstall, '/root/bin/myzfsinstall', mode=0755)
@@ -118,8 +133,8 @@ def bootstrap(**kwargs):
     run('mkdir -p /mnt/root/.ssh && chmod 0600 /mnt/root/.ssh')
     run('cp /etc/resolv.conf /mnt/etc/resolv.conf')
     run('mkdir -p /mnt/usr/local/etc/pkg/repos')
-    for source_path, target_path in necessary_files:
-        put(os.path.join(env['lcwd'], source_path), target_path)
+    for info in necessary_files.values():
+        put(info['local'], info['remote'])
     # install pkg, the tarball is also used for the ezjail flavour in bootstrap_ezjail
     run('mkdir -p /mnt/var/cache/pkg/All')
     run('fetch -o /mnt/var/cache/pkg/All/pkg.txz http://pkg.freebsd.org/freebsd:9:x86:64/latest/Latest/pkg.txz')
