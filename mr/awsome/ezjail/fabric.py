@@ -4,6 +4,7 @@ from __future__ import absolute_import
 def bootstrap(**kwargs):
     from fabric.api import env, put, run, settings, hide
     from mr.awsome.common import yesno
+    from mr.awsome.config import value_asbool
     import math
     import os
     import sys
@@ -161,7 +162,8 @@ def bootstrap(**kwargs):
             run("ssh-keygen %s -f /mnt/etc/ssh/%s -N ''" % (ssh_keygen_args, ssh_key))
     fingerprint = run("ssh-keygen -lf /mnt/etc/ssh/ssh_host_rsa_key")
     # reboot
-    with settings(hide('warnings'), warn_only=True):
-        run('reboot')
+    if value_asbool(env.server.config.get('bootstrap-reboot', 'true')):
+        with settings(hide('warnings'), warn_only=True):
+            run('reboot')
     print "The SSH fingerprint of the newly bootstrapped server is:"
     print fingerprint
