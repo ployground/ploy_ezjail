@@ -316,7 +316,7 @@ class Master(BaseMaster):
 
     @lazy
     def ezjail_admin_binary(self):
-        binary = self.binary_prefix + self.master_config.get('ezjail-admin', '/usr/local/bin/ezjail-admin')
+        binary = self.master_config.get('ezjail-admin', '/usr/local/bin/ezjail-admin')
         return binary
 
     @property
@@ -324,6 +324,7 @@ class Master(BaseMaster):
         return self.instance.conn
 
     def _exec(self, cmd, debug=False, stdin=None):
+        cmd = self.binary_prefix + cmd
         if debug:
             log.info(cmd)
         chan = self.conn.get_transport().open_session()
