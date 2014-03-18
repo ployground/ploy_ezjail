@@ -256,7 +256,7 @@ class ZFS_FS(object):
             rc, out, err = self.zfs.master._exec(' '.join(args))
             if rc != 0:
                 log.error(
-                    "Couldn't create zfs filesystem '%s' at '%s'." %(
+                    "Couldn't create zfs filesystem '%s' at '%s'." % (
                         self.name, self['path']))
                 log.error(err)
                 sys.exit(1)
