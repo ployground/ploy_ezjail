@@ -19,6 +19,6 @@ setup(
         'lazy'
     ],
     entry_points="""
-      [mr.awsome.plugins]
-      ezjail = mr.awsome.ezjail:plugin
+        [mr.awsome.plugins]
+        ezjail = mr.awsome.ezjail:plugin
     """)
