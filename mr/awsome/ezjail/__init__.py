@@ -443,8 +443,8 @@ class Master(BaseMaster):
 
 
 class MountsMassager(BaseMassager):
-    def __call__(self, main_config, sectionname):
-        value = main_config[self.sectiongroupname][sectionname][self.key]
+    def __call__(self, config, sectionname):
+        value = BaseMassager.__call__(self, config, sectionname)
         mounts = []
         for line in value.split('\n'):
             mount_options = line.split()
@@ -452,6 +452,8 @@ class MountsMassager(BaseMassager):
                 continue
             options = {}
             for mount_option in mount_options:
+                if '=' not in mount_option:
+                    raise ValueError("Mount option '%s' contains no equal sign." % mount_option)
                 (key, value) = mount_option.split('=')
                 (key, value) = (key.strip(), value.strip())
                 if key == 'create':
