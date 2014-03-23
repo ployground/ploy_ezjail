@@ -12,7 +12,7 @@ class DummyPlugin(object):
 
 
 def test_mounts_massager_invalid_option():
-    from mr.awsome.ezjail import MountsMassager
+    from mr.awsome_ezjail import MountsMassager
     dummyplugin = DummyPlugin()
     plugins = dict(
         dummy=dict(
@@ -28,7 +28,7 @@ def test_mounts_massager_invalid_option():
 
 
 def test_mounts_massager():
-    from mr.awsome.ezjail import MountsMassager
+    from mr.awsome_ezjail import MountsMassager
     dummyplugin = DummyPlugin()
     plugins = dict(
         dummy=dict(

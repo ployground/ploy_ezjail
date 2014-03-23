@@ -15,12 +15,11 @@ setup(
     namespace_packages=['mr'],
     install_requires=[
         'setuptools',
-        'mr.awsome',
-        'lazy'
+        'mr.awsome >= 1.0dev',
     ],
     setup_requires=[
         'setuptools-git'],
     entry_points="""
         [mr.awsome.plugins]
-        ezjail = mr.awsome.ezjail:plugin
+        ezjail = mr.awsome_ezjail:plugin
     """)
