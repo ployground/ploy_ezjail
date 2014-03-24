@@ -24,7 +24,7 @@ setup(
     install_requires=[
         'setuptools',
         'mr.awsome >= 1.0dev',
-    ],
+        'lazy'],
     setup_requires=[
         'setuptools-git'],
     entry_points="""
