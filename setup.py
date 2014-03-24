@@ -1,10 +1,18 @@
 from setuptools import setup
+import os
 
-version = "0.1"
+
+here = os.path.abspath(os.path.dirname(__file__))
+README = open(os.path.join(here, 'README.rst')).read()
+
+
+version = "1.0b1"
+
 
 setup(
     version=version,
     description="A plugin for mr.awsome providing support for FreeBSD jails using ezjail.",
+    long_description=README + "\n\n",
     name="mr.awsome.ezjail",
     author='Florian Schulze',
     author_email='florian.schulze@gmx.net',
