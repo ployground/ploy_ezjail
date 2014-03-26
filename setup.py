@@ -25,8 +25,6 @@ setup(
         'setuptools',
         'mr.awsome >= 1.0dev',
         'lazy'],
-    setup_requires=[
-        'setuptools-git'],
     entry_points="""
         [mr.awsome.plugins]
         ezjail = mr.awsome_ezjail:plugin
