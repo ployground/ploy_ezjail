@@ -1,5 +1,5 @@
 from lazy import lazy
-from mr.awsome.common import BaseMaster, StartupScriptMixin
+from mr.awsome.common import BaseInstance, BaseMaster, StartupScriptMixin
 from mr.awsome.config import BaseMassager, value_asbool
 from mr.awsome.plain import Instance as PlainInstance
 import logging
@@ -293,16 +293,51 @@ class ZFS(object):
         return self._cache[key]
 
 
+class ProxyInstance(BaseInstance):
+    def __init__(self, master, sid, config, instance):
+        if isinstance(instance, BaseInstance):
+            self.__dict__['instance'] = instance
+        else:
+            self._proxied_id = instance
+        BaseInstance.__init__(self, master, sid, config)
+
+    @lazy
+    def instance(self):
+        aws = self.__dict__['master'].aws
+        if 'masters' not in aws.__dict__:
+            raise AttributeError()
+        instances = aws.instances
+        if self._proxied_id not in instances:
+            raise EzjailError(
+                "The instance '%s' for ez-master '%s' wasn't found." % (
+                    self.master_config['ec2-instance'],
+                    self.id))
+        orig = instances[self._proxied_id]
+        config = orig.config.copy()
+        config.update(self.__dict__['config'])
+        instance = orig.__class__(orig.master, orig.id, config)
+        return instance
+
+    def __getattr__(self, name):
+        if 'instance' not in self.__dict__ and name in frozenset(('validate_id', 'get_massagers')):
+            raise AttributeError(name)
+        return getattr(self.instance, name)
+
+
 class Master(BaseMaster):
     sectiongroupname = 'ez-instance'
     instance_class = Instance
 
     def __init__(self, *args, **kwargs):
         BaseMaster.__init__(self, *args, **kwargs)
-        self.instance = PlainInstance(self, self.id, self.master_config)
+        self.debug = self.master_config.get('debug-commands', False)
+        if 'instance' not in self.master_config:
+            instance = PlainInstance(self, self.id, self.master_config)
+        else:
+            instance = self.master_config['instance']
+        self.instance = ProxyInstance(self, self.id, self.master_config, instance)
         self.instance.sectiongroupname = 'ez-master'
         self.instances[self.id] = self.instance
-        self.debug = self.master_config.get('debug-commands', False)
 
     @lazy
     def zfs(self):
