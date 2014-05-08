@@ -299,10 +299,26 @@ class Master(BaseMaster):
 
     def __init__(self, *args, **kwargs):
         BaseMaster.__init__(self, *args, **kwargs)
-        self.instance = PlainInstance(self, self.id, self.master_config)
-        self.instance.sectiongroupname = 'ez-master'
-        self.instances[self.id] = self.instance
         self.debug = self.master_config.get('debug-commands', False)
+        if 'instance' not in self.master_config:
+            self.instances[self.id] = self.instance
+
+    @lazy
+    def instance(self):
+        factory = PlainInstance
+        if 'instance' in self.master_config:
+            if self.master_config['instance'] in self.aws.instances:
+                instance = self.aws.instances[self.master_config['instance']]
+                factory = instance.__class__
+                init_data = instance.config.copy()
+                init_data.update(self.master_config)
+            else:
+                raise EzjailError("no such ec2-instance found (%s)" % self.master_config['ec2-instance'])
+        else:
+            init_data = self.master_config
+        instance = factory(self, self.id, init_data)
+        instance.sectiongroupname = 'ez-master'
+        return instance
 
     @lazy
     def zfs(self):
