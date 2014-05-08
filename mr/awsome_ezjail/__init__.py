@@ -318,6 +318,10 @@ class Master(BaseMaster):
             init_data = self.master_config
         instance = factory(self, self.id, init_data)
         instance.sectiongroupname = 'ez-master'
+        for plugin in self.aws.plugins.values():
+            if 'augment_instance' not in plugin:
+                continue
+            plugin['augment_instance'](instance)
         return instance
 
     @lazy
