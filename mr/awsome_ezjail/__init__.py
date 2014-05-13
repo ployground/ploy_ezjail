@@ -316,10 +316,6 @@ class ProxyInstance(BaseInstance):
         config = orig.config.copy()
         config.update(self.__dict__['config'])
         instance = orig.__class__(orig.master, orig.id, config)
-        for plugin in aws.plugins.values():
-            if 'augment_instance' not in plugin:
-                continue
-            plugin['augment_instance'](instance)
         return instance
 
     def __getattr__(self, name):
