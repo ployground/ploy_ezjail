@@ -4,6 +4,8 @@ Changelog
 1.0b3 - unreleased
 ------------------
 
+* Fixes to make ``[instance:...]`` using an ez-master work.
+  [fschulze]
 
 
 1.0b2 - 2014-05-15

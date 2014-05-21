@@ -70,6 +70,9 @@ class Instance(PlainInstance, StartupScriptMixin):
         info = out.split()
         return info[1]
 
+    def get_massagers(self):
+        return get_instance_massagers()
+
     def _status(self, jails=None):
         if jails is None:
             jails = self.master.ezjail_admin('list')
@@ -504,27 +507,36 @@ class MountsMassager(BaseMassager):
         return tuple(mounts)
 
 
-def get_massagers():
+def get_common_massagers():
+    from mr.awsome.plain import get_massagers as plain_massagers
+    return [(x.__class__, x.key) for x in plain_massagers()]
+
+
+def get_instance_massagers(sectiongroupname='instance'):
     from mr.awsome.config import BooleanMassager
     from mr.awsome.config import StartupScriptMassager
-    from mr.awsome.plain import get_massagers as plain_massagers
 
     massagers = []
 
-    common = []
-    for massager in plain_massagers():
-        common.append((massager.__class__, massager.key))
-
-    sectiongroupname = 'ez-instance'
-    for klass, name in common:
+    for klass, name in get_common_massagers():
         massagers.append(klass(sectiongroupname, name))
     massagers.extend([
         MountsMassager(sectiongroupname, 'mounts'),
         BooleanMassager(sectiongroupname, 'no-terminate'),
         StartupScriptMassager(sectiongroupname, 'startup_script')])
+    return massagers
+
+
+def get_massagers():
+    from mr.awsome.config import BooleanMassager
+
+    massagers = []
+
+    sectiongroupname = 'ez-instance'
+    massagers.extend(get_instance_massagers(sectiongroupname))
 
     sectiongroupname = 'ez-master'
-    for klass, name in common:
+    for klass, name in get_common_massagers():
         massagers.append(klass(sectiongroupname, name))
     massagers.extend([
         BooleanMassager(sectiongroupname, 'sudo'),
