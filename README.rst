@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0b3 - unreleased
+1.0b3 - 2014-05-21
 ------------------
 
 * Fixes to make ``[instance:...]`` using an ez-master work.
