@@ -4,6 +4,9 @@ Changelog
 1.0b4 - unreleased
 ------------------
 
+* Clear out massagers after copying the config for the proxy instance to
+  prevent conflicts when the proxy instance is created.
+  [fschulze]
 
 
 1.0b3 - 2014-05-21
