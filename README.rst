@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0b4 - unreleased
+1.0b4 - 2014-05-22
 ------------------
 
 * Clear out massagers after copying the config for the proxy instance to
