@@ -118,7 +118,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                     ip=self.config['ip'],
                     flavour=self.config.get('flavour'))
             except EzjailError as e:
-                for line in e.args[0].split('\n'):
+                for line in e.args[0].splitlines():
                     log.error(line)
                 sys.exit(1)
             jails = self.master.ezjail_admin('list')
@@ -175,7 +175,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             jail_root = jail['root'].rstrip('/')
             log.info("Setting up mount points")
             rc, out, err = self.master._exec("head -n 1 %s" % jail_fstab)
-            fstab = out.split('\n')
+            fstab = out.splitlines()
             fstab = fstab[:1]
             fstab.append('# mount points from mr.awsome')
             for mount in mounts:
@@ -199,7 +199,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                 'start',
                 name=self.id)
         except EzjailError as e:
-            for line in e.args[0].split('\n'):
+            for line in e.args[0].splitlines():
                 log.error(line)
             sys.exit(1)
 
@@ -395,7 +395,7 @@ class Master(BaseMaster):
         rc, out, err = self._ezjail_admin('list')
         if rc:
             raise EzjailError(err.strip())
-        lines = out.split('\n')
+        lines = out.splitlines()
         if len(lines) < 2:
             raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
         headers = []
@@ -453,7 +453,7 @@ class Master(BaseMaster):
             rc, out, err = self._ezjail_admin('list')
             if rc:
                 raise EzjailError(err.strip())
-            lines = out.split('\n')
+            lines = out.splitlines()
             if len(lines) < 2:
                 raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
             headers = self.ezjail_admin_list_headers
@@ -485,7 +485,7 @@ class MountsMassager(BaseMassager):
     def __call__(self, config, sectionname):
         value = BaseMassager.__call__(self, config, sectionname)
         mounts = []
-        for line in value.split('\n'):
+        for line in value.splitlines():
             mount_options = line.split()
             if not len(mount_options):
                 continue
