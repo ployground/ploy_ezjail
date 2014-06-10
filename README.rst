@@ -4,6 +4,10 @@ Changelog
 1.0b5 - unreleased
 ------------------
 
+* Forcefully destroy jail. Together with ezjail 3.4.1 this solves the issue
+  that sometimes the ZFS filesystem wasn't removed and the jail couldn't be
+  started without manual intervention.
+  [fschulze]
 
 
 1.0b4 - 2014-05-22

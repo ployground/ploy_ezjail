@@ -445,7 +445,7 @@ class Master(BaseMaster):
         elif command == 'delete':
             rc, out, err = self._ezjail_admin(
                 'delete',
-                '-w',
+                '-fw',
                 kwargs['name'])
             if rc:
                 raise EzjailError(err.strip())
