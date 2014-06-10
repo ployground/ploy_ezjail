@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0b5 - unreleased
+1.0b5 - 2014-06-10
 ------------------
 
 * Forcefully destroy jail. Together with ezjail 3.4.1 this solves the issue
