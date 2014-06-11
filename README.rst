@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0b6 - unreleased
+1.0b6 - 2014-06-11
 ------------------
 
 * Pass changes of proxy instance config on to the proxied instance config.
