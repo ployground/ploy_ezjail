@@ -1,6 +1,6 @@
 from lazy import lazy
 from mr.awsome.common import BaseInstance, BaseMaster, StartupScriptMixin
-from mr.awsome.config import BaseMassager, value_asbool
+from mr.awsome.config import BaseMassager, value_asbool, ConfigSection
 from mr.awsome.plain import Instance as PlainInstance
 import logging
 import re
@@ -296,13 +296,29 @@ class ZFS(object):
         return self._cache[key]
 
 
+class ProxyConfigSection(ConfigSection):
+    def __setitem__(self, name, value):
+        ConfigSection.__setitem__(self, name, value)
+        if not hasattr(self, '_proxied'):
+            return
+        self._proxied[name] = value
+
+    def __delitem__(self, name):
+        ConfigSection.__delitem__(self, name)
+        if not hasattr(self, '_proxied'):
+            return
+        del self._proxied[name]
+
+
 class ProxyInstance(BaseInstance):
     def __init__(self, master, sid, config, instance):
+        _config = ProxyConfigSection()
+        _config.update(config)
         if isinstance(instance, BaseInstance):
             self.__dict__['instance'] = instance
         else:
             self._proxied_id = instance
-        BaseInstance.__init__(self, master, sid, config)
+        BaseInstance.__init__(self, master, sid, _config)
 
     @lazy
     def instance(self):
@@ -320,6 +336,7 @@ class ProxyInstance(BaseInstance):
         config.update(self.__dict__['config'])
         config.massagers.clear()
         instance = orig.__class__(orig.master, orig.id, config)
+        self.config._proxied = instance.config
         return instance
 
     def __getattr__(self, name):

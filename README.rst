@@ -4,6 +4,8 @@ Changelog
 1.0b6 - unreleased
 ------------------
 
+* Pass changes of proxy instance config on to the proxied instance config.
+  [fschulze]
 
 
 1.0b5 - 2014-06-10
