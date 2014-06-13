@@ -336,6 +336,7 @@ class ProxyInstance(BaseInstance):
         config.update(self.__dict__['config'])
         config.massagers.clear()
         instance = orig.__class__(orig.master, orig.id, config)
+        self.config.update(config)
         self.config._proxied = instance.config
         return instance
 
