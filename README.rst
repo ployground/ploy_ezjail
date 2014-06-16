@@ -4,6 +4,9 @@ Changelog
 1.0b7 - unreleased
 ------------------
 
+* Provide default values for ``proxyhost`` and ``proxycommand`` options.
+  [fschulze]
+
 * Merge config of ez-master with the instance it's using.
   [fschulze]
 

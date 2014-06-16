@@ -74,6 +74,19 @@ class Instance(PlainInstance, StartupScriptMixin):
     def get_massagers(self):
         return get_instance_massagers()
 
+    def init_ssh_key(self, user=None):
+        if 'proxyhost' not in self.config:
+            self.config['proxyhost'] = self.master.id
+        if 'proxycommand' not in self.config:
+            mi = self.master.instance
+            master_ssh_info = mi.init_ssh_key()
+            master_ssh_args = mi.ssh_args_from_info(master_ssh_info)
+            ssh_args = ['nohup', 'ssh']
+            ssh_args.extend(master_ssh_args)
+            ssh_args.extend(['-W', '%s:%s' % (self.config['ip'], self.config.get('port', 22))])
+            self.config['proxycommand'] = ' '.join(ssh_args)
+        return PlainInstance.init_ssh_key(self, user=user)
+
     def _status(self, jails=None):
         if jails is None:
             jails = self.master.ezjail_admin('list')
