@@ -19,7 +19,7 @@ setup(
     url='http://github.com/fschulze/mr.awsome.ezjail',
     include_package_data=True,
     zip_safe=False,
-    packages=['mr'],
+    packages=['mr', 'mr.awsome_ezjail'],
     namespace_packages=['mr'],
     install_requires=[
         'setuptools',
