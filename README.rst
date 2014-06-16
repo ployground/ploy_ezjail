@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0b7 - unreleased
+1.0b7 - 2014-06-16
 ------------------
 
 * Provide default values for ``proxyhost`` and ``proxycommand`` options.
