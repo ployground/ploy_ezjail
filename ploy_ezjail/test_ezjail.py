@@ -1,5 +1,5 @@
 from StringIO import StringIO
-from mr.awsome.config import Config
+from ploy.config import Config
 import pytest
 
 
@@ -12,7 +12,7 @@ class DummyPlugin(object):
 
 
 def test_mounts_massager_invalid_option():
-    from mr.awsome_ezjail import MountsMassager
+    from ploy_ezjail import MountsMassager
     dummyplugin = DummyPlugin()
     plugins = dict(
         dummy=dict(
@@ -28,7 +28,7 @@ def test_mounts_massager_invalid_option():
 
 
 def test_mounts_massager():
-    from mr.awsome_ezjail import MountsMassager
+    from ploy_ezjail import MountsMassager
     dummyplugin = DummyPlugin()
     plugins = dict(
         dummy=dict(

@@ -1,15 +1,15 @@
 from lazy import lazy
-from mr.awsome.common import BaseMaster, StartupScriptMixin
-from mr.awsome.config import BaseMassager, value_asbool
-from mr.awsome.plain import Instance as PlainInstance
-from mr.awsome.proxy import ProxyInstance
+from ploy.common import BaseMaster, StartupScriptMixin
+from ploy.config import BaseMassager, value_asbool
+from ploy.plain import Instance as PlainInstance
+from ploy.proxy import ProxyInstance
 import logging
 import re
 import sys
 import time
 
 
-log = logging.getLogger('mr.awsome.ezjail')
+log = logging.getLogger('ploy_ezjail')
 
 
 class EzjailError(Exception):
@@ -19,13 +19,13 @@ class EzjailError(Exception):
 rc_startup = """#!/bin/sh
 #
 # BEFORE: DAEMON
-# PROVIDE: mr.awsome.startup_script
+# PROVIDE: ploy.startup_script
 #
-# mr.awsome startup script
+# ploy startup script
 
 . /etc/rc.subr
 
-name=mr.awsome.startup_script
+name=ploy.startup_script
 start_cmd=startup
 
 startup() {
@@ -33,7 +33,7 @@ startup() {
 # Remove traces of ourself
 # N.B.: Do NOT rm $0, it points to /etc/rc
 ##########################
-  rm -f "/etc/rc.d/mr.awsome.startup_script"
+  rm -f "/etc/rc.d/ploy.startup_script"
 
   test -e /etc/startup_script && /etc/startup_script || true
   test -e /etc/startup_script && chmod 0600 /etc/startup_script
@@ -150,7 +150,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                 log.error("Startup script chmod failed.")
                 log.error(err)
                 sys.exit(1)
-            rc_startup_dest = '%s/etc/rc.d/mr.awsome.startup_script' % jail['root']
+            rc_startup_dest = '%s/etc/rc.d/ploy.startup_script' % jail['root']
             rc, out, err = self.master._exec(
                 "cat - > %s" % rc_startup_dest,
                 stdin=rc_startup)
@@ -191,7 +191,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             rc, out, err = self.master._exec("head -n 1 %s" % jail_fstab)
             fstab = out.splitlines()
             fstab = fstab[:1]
-            fstab.append('# mount points from mr.awsome')
+            fstab.append('# mount points from ploy')
             for mount in mounts:
                 self.master._exec(
                     "mkdir -p '%s%s'" % (jail_root, mount['dst']))
@@ -491,13 +491,13 @@ class MountsMassager(BaseMassager):
 
 
 def get_common_massagers():
-    from mr.awsome.plain import get_massagers as plain_massagers
+    from ploy.plain import get_massagers as plain_massagers
     return [(x.__class__, x.key) for x in plain_massagers()]
 
 
 def get_instance_massagers(sectiongroupname='instance'):
-    from mr.awsome.config import BooleanMassager
-    from mr.awsome.config import StartupScriptMassager
+    from ploy.config import BooleanMassager
+    from ploy.config import StartupScriptMassager
 
     massagers = []
 
@@ -511,7 +511,7 @@ def get_instance_massagers(sectiongroupname='instance'):
 
 
 def get_massagers():
-    from mr.awsome.config import BooleanMassager
+    from ploy.config import BooleanMassager
 
     massagers = []
 
@@ -532,10 +532,10 @@ def get_massagers():
     return massagers
 
 
-def get_masters(aws):
-    masters = aws.config.get('ez-master', {})
+def get_masters(ploy):
+    masters = ploy.config.get('ez-master', {})
     for master, master_config in masters.iteritems():
-        yield Master(aws, master, master_config)
+        yield Master(ploy, master, master_config)
 
 
 plugin = dict(

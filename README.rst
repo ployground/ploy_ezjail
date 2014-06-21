@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.0b8 - Unreleased
+------------------
+
+* Renamed mr.awsome to ploy and mr.awsome.ezjail to ploy_ezjail.
+  [fschulze]
+
+
 1.0b7 - 2014-06-16
 ------------------
 
