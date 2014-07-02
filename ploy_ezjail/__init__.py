@@ -51,7 +51,7 @@ class Instance(PlainInstance, StartupScriptMixin):
 
     def validate_id(self, sid):
         if self._id_regexp.match(sid) is None:
-            log.error("Invalid instance name '%s'. An easy jail instance name may only contain letters, numbers and underscores." % sid)
+            log.error("Invalid instance name '%s'. An ezjail instance name may only contain letters, numbers and underscores." % sid)
             sys.exit(1)
         return sid
 
