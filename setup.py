@@ -16,6 +16,7 @@ setup(
     name="ploy_ezjail",
     author='Florian Schulze',
     author_email='florian.schulze@gmx.net',
+    license="BSD 3-Clause License",
     url='http://github.com/ployground/ploy_ezjail',
     include_package_data=True,
     zip_safe=False,
