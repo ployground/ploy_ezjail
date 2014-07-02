@@ -534,7 +534,7 @@ def get_massagers():
 
 def get_masters(ploy):
     masters = ploy.config.get('ez-master', {})
-    for master, master_config in masters.iteritems():
+    for master, master_config in masters.items():
         yield Master(ploy, master, master_config)
 
 
