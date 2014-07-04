@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0b8 - Unreleased
+1.0b8 - 2014-07-04
 ------------------
 
 * Python 3 compatibility.
