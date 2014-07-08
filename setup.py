@@ -31,7 +31,7 @@ setup(
     packages=['ploy_ezjail'],
     install_requires=[
         'setuptools',
-        'ploy >= 1.0rc10',
+        'ploy >= 1.0rc13',
         'lazy'],
     entry_points="""
         [ploy.plugins]
