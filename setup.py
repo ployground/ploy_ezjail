@@ -11,7 +11,7 @@ version = "1.0b9"
 
 setup(
     version=version,
-    description="A plugin for ploy providing support for FreeBSD jails using ezjail.",
+    description="Plugin for ploy to provision FreeBSD jails using ezjail.",
     long_description=README + "\n\n",
     name="ploy_ezjail",
     author='Florian Schulze',
