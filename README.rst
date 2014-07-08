@@ -1,9 +1,11 @@
 Changelog
 =========
 
-1.0b9 - Unreleased
+1.0b9 - 2014-07-08
 ------------------
 
+* Packaging and test fixes.
+  [fschulze]
 
 
 1.0b8 - 2014-07-04
