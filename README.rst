@@ -13,8 +13,6 @@ Installation
 
 ploy_ezjail is best installed with easy_install, pip or with zc.recipe.egg in a buildout.
 
-Once installed, it's functionality is immediately usable with ploy.
-
 
 Masters
 =======
@@ -22,7 +20,7 @@ Masters
 To use ploy_ezjail you need a host running FreeBSD on which you want to manage jails.
 
 You declare a master with ``[ez-master:masterid]`` where ``masterid`` is the name you want to use for this master.
-Now you can either add options like for a ``plain`` ploy instance, or you can use the ``instance`` option to refer to another existing instance from your config like this::
+Now you can either add options like for a ``plain`` ploy instance, or you can use the ``instance`` option to refer to another instance from your config like this::
 
     [ez-master:master1]
     host = myhost.example.com
@@ -33,7 +31,8 @@ Now you can either add options like for a ``plain`` ploy instance, or you can us
     [ez-master:master2]
     instance = foohost
 
-The latter is most useful with other ploy backend plugins.
+The latter is most useful in conjunction with other ploy backend plugins, as it allows you to easily switch between provisioners, i.e. to have an ``ez-master`` provisioned on VirtualBox during development and on a ``plain`` instance in production.
+
 
 Options
 -------
@@ -45,7 +44,7 @@ Options
   The instance to use as host for this master.
 
 ``ezjail-admin``
-  Path to the ``ezjail-admin`` script.
+  Path to the ``ezjail-admin`` script on the host.
   Defaults to ``/usr/local/bin/ezjail-admin``.
 
 ``sudo``
@@ -56,6 +55,7 @@ Instances
 =========
 
 At the moment all jails will be created using ZFS (the ``-c zfs`` option of ``ezjail-admin``), so the host needs to be setup accordingly.
+
 
 Options
 -------
@@ -94,7 +94,7 @@ Options
   If set to ``yes``, the jail can't be terminated via ploy until the setting is changed to ``no`` or removed entirely.
 
 ``startup_script``
-  Path to a script which will be run right after creation and first start of the jail.
+  Path to a local script (relative to the location of the configuration file) which will be run inside the jail right after creation and first start of the jail.
 
 
 ZFS sections
@@ -103,6 +103,7 @@ ZFS sections
 You can specify ZFS filesystems via ``[ez-zfs:name]`` sections.
 This is used in mounts of jails to get the mountpoint and verify that the path exists and is it's own ZFS filesystem.
 You can also create new ZFS filesystems with the ``create`` option.
+
 
 Options
 -------
