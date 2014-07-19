@@ -136,8 +136,8 @@ Options
 Changelog
 =========
 
-1.0b10 - Unreleased
--------------------
+1.0.0 - 2014-07-19
+------------------
 
 * Added documentation.
   [fschulze]

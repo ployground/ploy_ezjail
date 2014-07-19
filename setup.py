@@ -6,7 +6,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 
 
-version = "1.0b10"
+version = "1.0.0"
 
 
 setup(
@@ -31,7 +31,7 @@ setup(
     packages=['ploy_ezjail'],
     install_requires=[
         'setuptools',
-        'ploy >= 1.0rc13',
+        'ploy >= 1.0.0',
         'lazy'],
     entry_points="""
         [ploy.plugins]
