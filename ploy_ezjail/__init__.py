@@ -79,12 +79,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             self.config['proxyhost'] = self.master.id
         if 'proxycommand' not in self.config:
             mi = self.master.instance
-            master_ssh_info = mi.init_ssh_key()
-            master_ssh_args = mi.ssh_args_from_info(master_ssh_info)
-            ssh_args = ['nohup', 'ssh']
-            ssh_args.extend(master_ssh_args)
-            ssh_args.extend(['-W', '%s:%s' % (self.config['ip'], self.config.get('port', 22))])
-            self.config['proxycommand'] = ' '.join(ssh_args)
+            self.config['proxycommand'] = self.proxycommand_with_instance(mi)
         return PlainInstance.init_ssh_key(self, user=user)
 
     def _status(self, jails=None):

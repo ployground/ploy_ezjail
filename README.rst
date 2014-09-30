@@ -139,6 +139,8 @@ Changelog
 1.0.1 - Unreleased
 ------------------
 
+* Use new helper in ploy 1.0.2 to setup proxycommand.
+  [fschulze]
 
 
 1.0.0 - 2014-07-19
