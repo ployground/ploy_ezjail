@@ -139,6 +139,9 @@ Changelog
 1.0.1 - Unreleased
 ------------------
 
+* Check jail status before trying to connect.
+  [fschulze]
+
 * Use new helper in ploy 1.0.2 to setup proxycommand.
   [fschulze]
 
