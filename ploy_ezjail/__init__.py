@@ -75,6 +75,13 @@ class Instance(PlainInstance, StartupScriptMixin):
         return get_instance_massagers()
 
     def init_ssh_key(self, user=None):
+        status = self._status()
+        if status == 'unavailable':
+            log.error("Instance '%s' unavailable", self.id)
+            raise self.paramiko.SSHException()
+        if status != 'running':
+            log.error("Instance state: %s", status)
+            raise self.paramiko.SSHException()
         if 'proxyhost' not in self.config:
             self.config['proxyhost'] = self.master.id
         if 'proxycommand' not in self.config:
