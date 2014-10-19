@@ -139,6 +139,9 @@ Changelog
 1.0.1 - Unreleased
 ------------------
 
+* Print status of all jails when requesting status of master.
+  [fschulze]
+
 * Check jail status before trying to connect.
   [fschulze]
 

@@ -312,6 +312,24 @@ class ZFS(object):
         return self._cache[key]
 
 
+class EzjailProxyInstance(ProxyInstance):
+    def status(self):
+        result = self._proxied_instance.status()
+        if self._status() == 'running':
+            jails = self.master.ezjail_admin('list')
+            known = set(self.master.instances)
+            unknown = set(jails) - known
+            for sid in known:
+                if sid == self.id:
+                    continue
+                instance = self.master.instances[sid]
+                status = instance._status(jails)
+                log.info("%-20s %-15s %15s" % (sid, status, instance.config.get('ip', '')))
+            for sid in unknown:
+                log.warn("Unknown jail found: %-20s %15s" % (sid, jails[sid].get('ip', 'unknown ip')))
+        return result
+
+
 class Master(BaseMaster):
     sectiongroupname = 'ez-instance'
     instance_class = Instance
@@ -323,7 +341,7 @@ class Master(BaseMaster):
             instance = PlainInstance(self, self.id, self.master_config)
         else:
             instance = self.master_config['instance']
-        self.instance = ProxyInstance(self, self.id, self.master_config, instance)
+        self.instance = EzjailProxyInstance(self, self.id, self.master_config, instance)
         self.instance.sectiongroupname = 'ez-master'
         self.instances[self.id] = self.instance
 
