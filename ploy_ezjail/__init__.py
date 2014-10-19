@@ -322,13 +322,13 @@ class EzjailProxyInstance(ProxyInstance):
             jails = self.master.ezjail_admin('list')
             known = set(self.master.instances)
             unknown = set(jails) - known
-            for sid in known:
+            for sid in sorted(known):
                 if sid == self.id:
                     continue
                 instance = self.master.instances[sid]
                 status = instance._status(jails)
                 log.info("%-20s %-15s %15s" % (sid, status, instance.config.get('ip', '')))
-            for sid in unknown:
+            for sid in sorted(unknown):
                 log.warn("Unknown jail found: %-20s %15s" % (sid, jails[sid].get('ip', 'unknown ip')))
         return result
 
