@@ -314,8 +314,11 @@ class ZFS(object):
 
 class EzjailProxyInstance(ProxyInstance):
     def status(self):
-        result = self._proxied_instance.status()
-        if self._status() == 'running':
+        result = None
+        hasstatus = hasattr(self._proxied_instance, 'status')
+        if hasstatus:
+            result = self._proxied_instance.status()
+        if not hasstatus or self._status() == 'running':
             jails = self.master.ezjail_admin('list')
             known = set(self.master.instances)
             unknown = set(jails) - known
