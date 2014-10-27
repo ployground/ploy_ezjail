@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0.1 - Unreleased
+1.1.0 - 2014-10-27
 ------------------
 
 * Print status of all jails when requesting status of master.

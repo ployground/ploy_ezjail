@@ -6,7 +6,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 
 
-version = "1.0.1dev"
+version = "1.1.0"
 
 
 setup(
