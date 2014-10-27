@@ -1,0 +1,3 @@
+include *.rst
+include setup.py
+include tox.ini
