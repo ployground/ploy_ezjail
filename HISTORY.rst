@@ -4,6 +4,8 @@ Changelog
 1.1.1 - Unreleased
 ------------------
 
+* Use new ``Executor`` helper from ploy 1.2.0 which handles ssh agent forwarding.
+  [fschulze]
 
 
 1.1.0 - 2014-10-27

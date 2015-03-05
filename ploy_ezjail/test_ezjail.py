@@ -3,6 +3,7 @@ try:
 except ImportError:  # pragma: nocover
     from io import StringIO
 from hashlib import md5
+from ploy.common import shjoin
 from ploy.config import Config
 import logging
 import pytest
@@ -79,8 +80,10 @@ class MasterExec:
     expect = []
     got = []
 
-    def __call__(self, cmd, debug=False, stdin=None):
-        log.debug('ezjail %r debug=%r stdin=%r', cmd, debug, stdin)
+    def __call__(self, *cmd_args, **kw):
+        stdin = kw.get('stdin')
+        cmd = shjoin(cmd_args)
+        log.debug('ezjail %r stdin=%r', cmd, stdin)
         try:
             expected = self.expect.pop(0)
         except IndexError:  # pragma: no cover - only on failures
@@ -134,17 +137,17 @@ def test_start(ctrl, master_exec, caplog):
         ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), ''),
         ('/usr/local/bin/ezjail-admin create -c zfs foo 10.0.0.1', 0, '', ''),
         ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': 'foo', 'ip': '10.0.0.1', 'status': 'ZS'}), ''),
-        ('cat - > /usr/jails/foo/etc/startup_script', 0, '', ''),
+        ("""sh -c 'cat - > "/usr/jails/foo/etc/startup_script"'""", 0, '', ''),
         ('chmod 0700 /usr/jails/foo/etc/startup_script', 0, '', ''),
-        ('cat - > /usr/jails/foo/etc/rc.d/ploy.startup_script', 0, '', ''),
+        ("""sh -c 'cat - > "/usr/jails/foo/etc/rc.d/ploy.startup_script"'""", 0, '', ''),
         ('chmod 0700 /usr/jails/foo/etc/rc.d/ploy.startup_script', 0, '', ''),
         ('/usr/local/bin/ezjail-admin start foo', 0, '', '')]
     ctrl(['./bin/ploy', 'start', 'foo'])
     assert master_exec.expect == []
     assert len(master_exec.got) == 2
-    assert master_exec.got[0][0] == 'cat - > /usr/jails/foo/etc/startup_script'
+    assert master_exec.got[0][0] == """sh -c 'cat - > "/usr/jails/foo/etc/startup_script"'"""
     assert master_exec.got[0][1] == ''
-    assert master_exec.got[1][0] == 'cat - > /usr/jails/foo/etc/rc.d/ploy.startup_script'
+    assert master_exec.got[1][0] == """sh -c 'cat - > "/usr/jails/foo/etc/rc.d/ploy.startup_script"'"""
     assert 'PROVIDE: ploy.startup_script' in master_exec.got[1][1]
     assert caplog_messages(caplog) == [
         "Creating instance 'foo'",

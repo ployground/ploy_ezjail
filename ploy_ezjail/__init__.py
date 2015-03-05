@@ -1,5 +1,5 @@
 from lazy import lazy
-from ploy.common import BaseMaster, StartupScriptMixin
+from ploy.common import BaseMaster, Executor, StartupScriptMixin
 from ploy.config import BaseMassager, value_asbool
 from ploy.plain import Instance as PlainInstance
 from ploy.proxy import ProxyInstance
@@ -67,7 +67,6 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instance state: %s", status)
             sys.exit(1)
         rc, out, err = self.master.ezjail_admin('console', name=self.id, cmd='ssh-keygen -lf /etc/ssh/ssh_host_rsa_key.pub')
-        self.master.conn.close()
         info = out.split()
         return info[1]
 
@@ -141,26 +140,26 @@ class Instance(PlainInstance, StartupScriptMixin):
             jail = jails.get(self.id)
             startup_dest = '%s/etc/startup_script' % jail['root']
             rc, out, err = self.master._exec(
-                "cat - > %s" % startup_dest,
+                'sh', '-c', 'cat - > "%s"' % startup_dest,
                 stdin=startup_script)
             if rc != 0:
                 log.error("Startup script creation failed.")
                 log.error(err)
                 sys.exit(1)
-            rc, out, err = self.master._exec("chmod 0700 %s" % startup_dest)
+            rc, out, err = self.master._exec("chmod", "0700", startup_dest)
             if rc != 0:
                 log.error("Startup script chmod failed.")
                 log.error(err)
                 sys.exit(1)
             rc_startup_dest = '%s/etc/rc.d/ploy.startup_script' % jail['root']
             rc, out, err = self.master._exec(
-                "cat - > %s" % rc_startup_dest,
+                'sh', '-c', 'cat - > "%s"' % rc_startup_dest,
                 stdin=rc_startup)
             if rc != 0:
                 log.error("Startup rc script creation failed.")
                 log.error(err)
                 sys.exit(1)
-            rc, out, err = self.master._exec("chmod 0700 %s" % rc_startup_dest)
+            rc, out, err = self.master._exec("chmod", "0700", rc_startup_dest)
             if rc != 0:
                 log.error("Startup rc script chmod failed.")
                 log.error(err)
@@ -180,7 +179,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             create_mount = mount.get('create', False)
             mounts.append(dict(src=src, dst=dst, ro=mount.get('ro', False)))
             if create_mount:
-                rc, out, err = self.master._exec("mkdir -p '%s'" % src)
+                rc, out, err = self.master._exec("mkdir", "-p", src)
                 if rc != 0:
                     log.error("Couldn't create source directory '%s' for mountpoint '%s'." % src, mount['src'])
                     log.error(err)
@@ -190,13 +189,13 @@ class Instance(PlainInstance, StartupScriptMixin):
             jail_fstab = '/etc/fstab.%s' % self.id
             jail_root = jail['root'].rstrip('/')
             log.info("Setting up mount points")
-            rc, out, err = self.master._exec("head -n 1 %s" % jail_fstab)
+            rc, out, err = self.master._exec("head", "-n", "1", jail_fstab)
             fstab = out.splitlines()
             fstab = fstab[:1]
             fstab.append('# mount points from ploy')
             for mount in mounts:
                 self.master._exec(
-                    "mkdir -p '%s%s'" % (jail_root, mount['dst']))
+                    "mkdir", "-p", "%s%s" % (jail_root, mount['dst']))
                 if mount['ro']:
                     mode = 'ro'
                 else:
@@ -204,7 +203,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                 fstab.append('%s %s%s nullfs %s 0 0' % (mount['src'], jail_root, mount['dst'], mode))
             fstab.append('')
             rc, out, err = self.master._exec(
-                "cat - > %s" % jail_fstab,
+                'sh', '-c', 'cat - > "%s"' % jail_fstab,
                 stdin='\n'.join(fstab))
         if startup_script:
             log.info("Starting instance '%s' with startup script, this can take a while.", self.id)
@@ -263,8 +262,10 @@ class ZFS_FS(object):
         self.name = name
         self.zfs = zfs
         self.config = config
-        mp_args = "zfs get -Hp -o property,value mountpoint '%s'" % self['path']
-        rc, rout, rerr = self.zfs.master._exec(mp_args)
+        mp_args = (
+            "zfs", "get", "-Hp", "-o", "property,value",
+            "mountpoint", self['path'])
+        rc, rout, rerr = self.zfs.master._exec(*mp_args)
         if rc != 0 and self.config.get('create', False):
             args = ['zfs', 'create']
             for k, v in self.config.items():
@@ -272,14 +273,14 @@ class ZFS_FS(object):
                     continue
                 args.append("-o '%s=%s'" % (k[4:], v))
             args.append(self['path'])
-            rc, out, err = self.zfs.master._exec(' '.join(args))
+            rc, out, err = self.zfs.master._exec(*args)
             if rc != 0:
                 log.error(
                     "Couldn't create zfs filesystem '%s' at '%s'." % (
                         self.name, self['path']))
                 log.error(err)
                 sys.exit(1)
-        rc, out, err = self.zfs.master._exec(mp_args)
+        rc, out, err = self.zfs.master._exec(*mp_args)
         if rc == 0:
             info = out.strip().split('\t')
             assert info[0] == 'mountpoint'
@@ -341,6 +342,7 @@ class EzjailProxyInstance(ProxyInstance):
 class Master(BaseMaster):
     sectiongroupname = 'ez-instance'
     instance_class = Instance
+    _exec = None
 
     def __init__(self, *args, **kwargs):
         BaseMaster.__init__(self, *args, **kwargs)
@@ -352,53 +354,24 @@ class Master(BaseMaster):
         self.instance = EzjailProxyInstance(self, self.id, self.master_config, instance)
         self.instance.sectiongroupname = 'ez-master'
         self.instances[self.id] = self.instance
+        prefix_args = ()
+        if self.master_config.get('sudo'):
+            prefix_args = ('sudo',)
+        if self._exec is None:
+            self._exec = Executor(
+                instance=self.instance, prefix_args=prefix_args)
 
     @lazy
     def zfs(self):
         return ZFS(self)
 
     @lazy
-    def binary_prefix(self):
-        if self.master_config.get('sudo'):
-            return "sudo "
-        return ""
-
-    @lazy
     def ezjail_admin_binary(self):
         binary = self.master_config.get('ezjail-admin', '/usr/local/bin/ezjail-admin')
         return binary
 
-    @property
-    def conn(self):
-        return self.instance.conn
-
-    def _exec(self, cmd, debug=False, stdin=None):
-        cmd = self.binary_prefix + cmd
-        if debug:
-            log.info(cmd)
-        chan = self.conn.get_transport().open_session()
-        if stdin is not None:
-            rin = chan.makefile('wb', -1)
-        rout = chan.makefile('rb', -1)
-        rerr = chan.makefile_stderr('rb', -1)
-        chan.exec_command(cmd)
-        if stdin is not None:
-            rin.write(stdin)
-            rin.flush()
-            chan.shutdown_write()
-        out = rout.read()
-        err = rerr.read()
-        rc = chan.recv_exit_status()
-        if debug and out.strip():
-            log.info(out)
-        if debug and err.strip():
-            log.error(err)
-        return rc, out, err
-
     def _ezjail_admin(self, *args):
-        return self._exec(
-            "%s %s" % (self.ezjail_admin_binary, " ".join(args)),
-            self.debug)
+        return self._exec(self.ezjail_admin_binary, *args)
 
     @lazy
     def ezjail_admin_list_headers(self):
@@ -428,7 +401,6 @@ class Master(BaseMaster):
             if v is None:
                 continue
             if command == 'console' and k == 'cmd':
-                kwargs[k] = v.replace('"', '\\"')
                 continue
             if len(v.split()) != 1:
                 log.error("The value '%s' of kwarg '%s' contains whitespace", v, k)
@@ -437,7 +409,7 @@ class Master(BaseMaster):
             return self._ezjail_admin(
                 'console',
                 '-e',
-                '"%s"' % kwargs['cmd'],
+                kwargs['cmd'],
                 kwargs['name'])
         elif command == 'create':
             args = [
