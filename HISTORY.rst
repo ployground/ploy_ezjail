@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.1.1 - Unreleased
+1.2.0 - 2015-03-05
 ------------------
 
 * Use new ``Executor`` helper from ploy 1.2.0 which handles ssh agent forwarding.
