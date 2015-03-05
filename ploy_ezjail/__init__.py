@@ -351,9 +351,12 @@ class Master(BaseMaster):
             instance = PlainInstance(self, self.id, self.master_config)
         else:
             instance = self.master_config['instance']
-        self.instance = EzjailProxyInstance(self, self.id, self.master_config, instance)
-        self.instance.sectiongroupname = 'ez-master'
-        self.instances[self.id] = self.instance
+        if instance:
+            self.instance = EzjailProxyInstance(self, self.id, self.master_config, instance)
+            self.instance.sectiongroupname = 'ez-master'
+            self.instances[self.id] = self.instance
+        else:
+            self.instance = None
         prefix_args = ()
         if self.master_config.get('sudo'):
             prefix_args = ('sudo',)

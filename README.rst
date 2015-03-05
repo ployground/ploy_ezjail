@@ -42,6 +42,7 @@ Options
 
 ``instance``
   The instance to use as host for this master.
+  If empty, the local machine is used without an ssh connection.
 
 ``ezjail-admin``
   Path to the ``ezjail-admin`` script on the host.

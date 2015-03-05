@@ -7,6 +7,10 @@ Changelog
 * Use new ``Executor`` helper from ploy 1.2.0 which handles ssh agent forwarding.
   [fschulze]
 
+* Enable "local mode" where if the ``instance`` option is empty all commands
+  are executed locally.
+  [fschulze]
+
 
 1.1.0 - 2014-10-27
 ------------------
