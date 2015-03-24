@@ -320,7 +320,11 @@ class EzjailProxyInstance(ProxyInstance):
         if hasstatus:
             result = self._proxied_instance.status()
         if not hasstatus or self._status() == 'running':
-            jails = self.master.ezjail_admin('list')
+            try:
+                jails = self.master.ezjail_admin('list')
+            except EzjailError as e:
+                log.error("Can't get status of jails: %s", e)
+                return result
             known = set(self.master.instances)
             unknown = set(jails) - known
             for sid in sorted(known):

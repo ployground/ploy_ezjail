@@ -4,6 +4,8 @@ Changelog
 1.2.1 - Unreleased
 ------------------
 
+* Improved error handling with useful error messages instead of tracebacks.
+  [fschulze]
 
 
 1.2.0 - 2015-03-05
