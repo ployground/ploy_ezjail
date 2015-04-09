@@ -5,6 +5,7 @@ from ploy.plain import Instance as PlainInstance
 from ploy.proxy import ProxyInstance
 import logging
 import re
+import socket
 import sys
 import time
 
@@ -104,7 +105,11 @@ class Instance(PlainInstance, StartupScriptMixin):
         raise EzjailError("Don't know how to handle mounted but not running jail '%s'" % self.id)
 
     def status(self):
-        jails = self.master.ezjail_admin('list')
+        try:
+            jails = self.master.ezjail_admin('list')
+        except EzjailError as e:
+            log.error("Can't get status of jails: %s", e)
+            return
         status = self._status(jails)
         if status == 'unavailable':
             log.info("Instance '%s' unavailable", self.id)
@@ -378,7 +383,10 @@ class Master(BaseMaster):
         return binary
 
     def _ezjail_admin(self, *args):
-        return self._exec(self.ezjail_admin_binary, *args)
+        try:
+            return self._exec(self.ezjail_admin_binary, *args)
+        except socket.error as e:
+            raise EzjailError("Couldn't connect to instance [%s]:\n%s" % (self.instance.config_id, e))
 
     @lazy
     def ezjail_admin_list_headers(self):
