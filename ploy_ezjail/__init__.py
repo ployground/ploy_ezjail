@@ -176,7 +176,8 @@ class Instance(PlainInstance, StartupScriptMixin):
             return True
 
         rc_provide = self.config.get('rc_provide', '')
-        self.master._exec("sed",
+        self.master._exec(
+            "sed",
             "-i",
             "",
             "-e",
@@ -185,7 +186,8 @@ class Instance(PlainInstance, StartupScriptMixin):
 
         rc_require = self.config.get('rc_require')
         if rc_require is not None:
-            self.master._exec("sed",
+            self.master._exec(
+                "sed",
                 "-i",
                 "",
                 "-e",
