@@ -100,6 +100,7 @@ Options
 ``rc_require``
   String that indicates which other jails this jail requires to start up, effectively allowing you to define the startup order of jails.
   See ``rcorder(8)`` for more details.
+  This value is written upon each startup of the jail not just when it is created initially, so to have changes take effect, it's sufficient to restart it.
   **Optional**
 
 ``rc_provide``
@@ -107,6 +108,7 @@ Options
   ``ezjail`` itself always sets its jails to provide ``standard_ezjail`` to which ``ploy_ezjail`` adds the name of the jail.
   IOW if you simply want to build a startup order using the names of the jails, you will not need to set this value.
   If you want this jail to provide any additional values, set them here.
+  This value is written upon each startup of the jail not just when it is created initially, so to have changes take effect, it's sufficient to restart it.
   **Optional**
 
 
