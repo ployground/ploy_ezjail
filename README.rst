@@ -97,6 +97,18 @@ Options
 ``startup_script``
   Path to a local script (relative to the location of the configuration file) which will be run inside the jail right after creation and first start of the jail.
 
+``rc_require``
+  String that indicates which other jails this jail requires to start up, effectively allowing you to define the startup order of jails.
+  See ``rcorder(8)`` for more details.
+  **Optional**
+
+``rc_provide``
+  String that indicates what this jail provides.
+  ``ezjail`` itself always sets its jails to provide ``standard_ezjail`` to which ``ploy_ezjail`` adds the name of the jail.
+  IOW if you simply want to build a startup order using the names of the jails, you will not need to set this value.
+  If you want this jail to provide any additional values, set them here.
+  **Optional**
+
 
 ZFS sections
 ============
