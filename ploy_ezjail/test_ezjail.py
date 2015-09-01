@@ -141,6 +141,7 @@ def test_start(ctrl, master_exec, caplog):
         ('chmod 0700 /usr/jails/foo/etc/startup_script', 0, '', ''),
         ("""sh -c 'cat - > "/usr/jails/foo/etc/rc.d/ploy.startup_script"'""", 0, '', ''),
         ('chmod 0700 /usr/jails/foo/etc/rc.d/ploy.startup_script', 0, '', ''),
+        ("""sed -i '' -e 's/\# PROVIDE: standard_ezjail/\# PROVIDE: standard_ezjail foo /' /usr/local/etc/ezjail/foo""", 0, '', ''),
         ('/usr/local/bin/ezjail-admin start foo', 0, '', '')]
     ctrl(['./bin/ploy', 'start', 'foo'])
     assert master_exec.expect == []
