@@ -174,6 +174,26 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instance state: %s", status)
             log.info("Instance already started")
             return True
+
+        rc_provide = self.config.get('rc_provide', '')
+        self.master._exec(
+            "sed",
+            "-i",
+            "",
+            "-e",
+            "s/\# PROVIDE:.*$/\# PROVIDE: standard_ezjail %s %s/" % (self.id, rc_provide),
+            "/usr/local/etc/ezjail/%s" % self.id)
+
+        rc_require = self.config.get('rc_require')
+        if rc_require is not None:
+            self.master._exec(
+                "sed",
+                "-i",
+                "",
+                "-e",
+                "s/\# REQUIRE:.*$/\# REQUIRE: %s/" % rc_require,
+                "/usr/local/etc/ezjail/%s" % self.id)
+
         mounts = []
         for mount in self.config.get('mounts', []):
             src = mount['src'].format(

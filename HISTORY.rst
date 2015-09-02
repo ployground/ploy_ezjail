@@ -6,6 +6,8 @@ Changelog
 
 * Improved error handling with useful error messages instead of tracebacks.
   [fschulze]
+* Allow setting startup order of jails
+  [tomster]
 
 
 1.2.0 - 2015-03-05
