@@ -1,12 +1,13 @@
 Changelog
 =========
 
-1.2.1 - Unreleased
+1.3.0 - 2015-09-03
 ------------------
 
 * Improved error handling with useful error messages instead of tracebacks.
   [fschulze]
-* Allow setting startup order of jails
+
+* Allow setting startup order of jails.
   [tomster]
 
 
