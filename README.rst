@@ -68,6 +68,9 @@ Options
 ``flavour``
   The **flavour** to use for this jail. This is explained in the `ezjail docs <http://erdgeist.org/arts/software/ezjail/>`_.
 
+``ezjail-name``
+  The **name** to use for the jail. By default the id of the instance is used.
+
 ``mounts``
   Additional mount points for the jail.
   You can specify one mount point per line.

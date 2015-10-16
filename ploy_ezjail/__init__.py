@@ -50,6 +50,10 @@ class Instance(PlainInstance, StartupScriptMixin):
 
     _id_regexp = re.compile('^[a-zA-Z0-9_]+$')
 
+    @property
+    def _name(self):
+        return self.config.get('ezjail-name', self.id)
+
     def validate_id(self, sid):
         if self._id_regexp.match(sid) is None:
             log.error("Invalid instance name '%s'. An ezjail instance name may only contain letters, numbers and underscores." % sid)
@@ -67,7 +71,7 @@ class Instance(PlainInstance, StartupScriptMixin):
         if status != 'running':
             log.info("Instance state: %s", status)
             sys.exit(1)
-        rc, out, err = self.master.ezjail_admin('console', name=self.id, cmd='ssh-keygen -lf /etc/ssh/ssh_host_rsa_key.pub')
+        rc, out, err = self.master.ezjail_admin('console', name=self._name, cmd='ssh-keygen -lf /etc/ssh/ssh_host_rsa_key.pub')
         info = out.split()
         return info[1]
 
@@ -92,17 +96,17 @@ class Instance(PlainInstance, StartupScriptMixin):
     def _status(self, jails=None):
         if jails is None:
             jails = self.master.ezjail_admin('list')
-        if self.id not in jails:
+        if self._name not in jails:
             return 'unavailable'
-        jail = jails[self.id]
+        jail = jails[self._name]
         status = jail['status']
         if len(status) != 2 or status[0] not in 'DIEBZ' or status[1] not in 'RAS':
-            raise EzjailError("Invalid jail status '%s' for '%s'" % (status, self.id))
+            raise EzjailError("Invalid jail status '%s' for '%s'" % (status, self._name))
         if status[1] == 'R':
             return 'running'
         elif status[1] == 'S':
             return 'stopped'
-        raise EzjailError("Don't know how to handle mounted but not running jail '%s'" % self.id)
+        raise EzjailError("Don't know how to handle mounted but not running jail '%s'" % self._name)
 
     def status(self):
         try:
@@ -118,8 +122,10 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instance state: %s", status)
             return
         log.info("Instance running.")
-        log.info("Instances jail id %s" % jails[self.id]['jid'])
-        log.info("Instances jail ip %s" % jails[self.id]['ip'])
+        log.info("Instances jail id: %s" % jails[self._name]['jid'])
+        if self._name != self.id:
+            log.info("Instances jail name: %s" % self._name)
+        log.info("Instances jail ip: %s" % jails[self._name]['ip'])
 
     def start(self, overrides=None):
         jails = self.master.ezjail_admin('list')
@@ -134,7 +140,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             try:
                 self.master.ezjail_admin(
                     'create',
-                    name=self.id,
+                    name=self._name,
                     ip=self.config['ip'],
                     flavour=self.config.get('flavour'))
             except EzjailError as e:
@@ -142,7 +148,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                     log.error(line)
                 sys.exit(1)
             jails = self.master.ezjail_admin('list')
-            jail = jails.get(self.id)
+            jail = jails.get(self._name)
             startup_dest = '%s/etc/startup_script' % jail['root']
             rc, out, err = self.master._exec(
                 'sh', '-c', 'cat - > "%s"' % startup_dest,
@@ -181,8 +187,8 @@ class Instance(PlainInstance, StartupScriptMixin):
             "-i",
             "",
             "-e",
-            "s/\# PROVIDE:.*$/\# PROVIDE: standard_ezjail %s %s/" % (self.id, rc_provide),
-            "/usr/local/etc/ezjail/%s" % self.id)
+            "s/\# PROVIDE:.*$/\# PROVIDE: standard_ezjail %s %s/" % (self._name, rc_provide),
+            "/usr/local/etc/ezjail/%s" % self._name)
 
         rc_require = self.config.get('rc_require')
         if rc_require is not None:
@@ -192,15 +198,15 @@ class Instance(PlainInstance, StartupScriptMixin):
                 "",
                 "-e",
                 "s/\# REQUIRE:.*$/\# REQUIRE: %s/" % rc_require,
-                "/usr/local/etc/ezjail/%s" % self.id)
+                "/usr/local/etc/ezjail/%s" % self._name)
 
         mounts = []
         for mount in self.config.get('mounts', []):
             src = mount['src'].format(
                 zfs=self.master.zfs,
-                name=self.id)
+                name=self._name)
             dst = mount['dst'].format(
-                name=self.id)
+                name=self._name)
             create_mount = mount.get('create', False)
             mounts.append(dict(src=src, dst=dst, ro=mount.get('ro', False)))
             if create_mount:
@@ -210,8 +216,8 @@ class Instance(PlainInstance, StartupScriptMixin):
                     log.error(err)
                     sys.exit(1)
         if mounts:
-            jail = jails.get(self.id)
-            jail_fstab = '/etc/fstab.%s' % self.id
+            jail = jails.get(self._name)
+            jail_fstab = '/etc/fstab.%s' % self._name
             jail_root = jail['root'].rstrip('/')
             log.info("Setting up mount points")
             rc, out, err = self.master._exec("head", "-n", "1", jail_fstab)
@@ -237,7 +243,7 @@ class Instance(PlainInstance, StartupScriptMixin):
         try:
             self.master.ezjail_admin(
                 'start',
-                name=self.id)
+                name=self._name)
         except EzjailError as e:
             for line in e.args[0].splitlines():
                 log.error(line)
@@ -253,7 +259,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instance not stopped")
             return
         log.info("Stopping instance '%s'", self.id)
-        self.master.ezjail_admin('stop', name=self.id)
+        self.master.ezjail_admin('stop', name=self._name)
         log.info("Instance stopped")
 
     def terminate(self):
@@ -267,7 +273,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             return
         if status == 'running':
             log.info("Stopping instance '%s'", self.id)
-            self.master.ezjail_admin('stop', name=self.id)
+            self.master.ezjail_admin('stop', name=self._name)
         if status != 'stopped':
             log.info('Waiting for jail to stop')
             while status != 'stopped':
@@ -278,13 +284,13 @@ class Instance(PlainInstance, StartupScriptMixin):
                 time.sleep(1)
             print
         log.info("Terminating instance '%s'", self.id)
-        self.master.ezjail_admin('delete', name=self.id)
+        self.master.ezjail_admin('delete', name=self._name)
         log.info("Instance terminated")
 
 
 class ZFS_FS(object):
     def __init__(self, zfs, name, config):
-        self.name = name
+        self._name = name
         self.zfs = zfs
         self.config = config
         mp_args = (
@@ -302,7 +308,7 @@ class ZFS_FS(object):
             if rc != 0:
                 log.error(
                     "Couldn't create zfs filesystem '%s' at '%s'." % (
-                        self.name, self['path']))
+                        self._name, self['path']))
                 log.error(err)
                 sys.exit(1)
         rc, out, err = self.zfs.master._exec(*mp_args)
@@ -313,7 +319,7 @@ class ZFS_FS(object):
             return
         log.error(
             "Trying to use non existing zfs filesystem '%s' at '%s'." % (
-                self.name, self['path']))
+                self._name, self['path']))
         sys.exit(1)
 
     def __getitem__(self, key):
@@ -350,15 +356,15 @@ class EzjailProxyInstance(ProxyInstance):
             except EzjailError as e:
                 log.error("Can't get status of jails: %s", e)
                 return result
-            known = set(self.master.instances)
-            unknown = set(jails) - known
-            for sid in sorted(known):
+            unknown = set(jails)
+            for sid in sorted(self.master.instances):
                 if sid == self.id:
                     continue
                 instance = self.master.instances[sid]
+                unknown.remove(instance._name)
                 status = instance._status(jails)
                 sip = instance.config.get('ip', '')
-                jip = jails.get(sid, {}).get('ip', 'unknown ip')
+                jip = jails.get(instance._name, {}).get('ip', 'unknown ip')
                 if status == 'running' and jip != sip:
                     sip = "%s != configured %s" % (jip, sip)
                 log.info("%-20s %-15s %15s" % (sid, status, sip))
