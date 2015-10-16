@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.4.0 - Unreleased
+1.4.0 - 2015-10-16
 ------------------
 
 * Allow setting the jail name via ``ezjail-name`` instead of using the instance
