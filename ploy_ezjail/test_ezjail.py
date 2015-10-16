@@ -56,17 +56,25 @@ def test_mounts_massager():
                     'ro': True},)}}
 
 
-@pytest.yield_fixture
-def ctrl(ployconf):
+@pytest.fixture(params=['foo', 'bar'])
+def ezjail_name(request):
+    return request.param
+
+
+@pytest.fixture
+def ctrl(ployconf, ezjail_name):
     from ploy import Controller
     import ploy_ezjail
-    ployconf.fill([
+    lines = [
         '[ez-master:warden]',
         '[ez-instance:foo]',
-        'ip = 10.0.0.1'])
+        'ip = 10.0.0.1']
+    if ezjail_name is not 'foo':
+        lines.append('ezjail-name = %s' % ezjail_name)
+    ployconf.fill(lines)
     ctrl = Controller(configpath=ployconf.directory)
     ctrl.plugins = {'ezjail': ploy_ezjail.plugin}
-    yield ctrl
+    return ctrl
 
 
 @pytest.fixture(autouse=True)
@@ -77,8 +85,9 @@ def _exec(monkeypatch):
 
 
 class MasterExec:
-    expect = []
-    got = []
+    def __init__(self):
+        self.expect = []
+        self.got = []
 
     def __call__(self, *cmd_args, **kw):
         stdin = kw.get('stdin')
@@ -131,24 +140,24 @@ def caplog_messages(caplog, level=logging.INFO):
         if x.levelno >= level]
 
 
-def test_start(ctrl, master_exec, caplog):
+def test_start(ctrl, ezjail_name, master_exec, caplog):
     master_exec.expect = [
         ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), ''),
         ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), ''),
-        ('/usr/local/bin/ezjail-admin create -c zfs foo 10.0.0.1', 0, '', ''),
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': 'foo', 'ip': '10.0.0.1', 'status': 'ZS'}), ''),
-        ("""sh -c 'cat - > "/usr/jails/foo/etc/startup_script"'""", 0, '', ''),
-        ('chmod 0700 /usr/jails/foo/etc/startup_script', 0, '', ''),
-        ("""sh -c 'cat - > "/usr/jails/foo/etc/rc.d/ploy.startup_script"'""", 0, '', ''),
-        ('chmod 0700 /usr/jails/foo/etc/rc.d/ploy.startup_script', 0, '', ''),
-        ("""sed -i '' -e 's/\# PROVIDE:.*$/\# PROVIDE: standard_ezjail foo /' /usr/local/etc/ezjail/foo""", 0, '', ''),
-        ('/usr/local/bin/ezjail-admin start foo', 0, '', '')]
+        ('/usr/local/bin/ezjail-admin create -c zfs %s 10.0.0.1' % ezjail_name, 0, '', ''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), ''),
+        ("""sh -c 'cat - > "/usr/jails/%s/etc/startup_script"'""" % ezjail_name, 0, '', ''),
+        ('chmod 0700 /usr/jails/%s/etc/startup_script' % ezjail_name, 0, '', ''),
+        ("""sh -c 'cat - > "/usr/jails/%s/etc/rc.d/ploy.startup_script"'""" % ezjail_name, 0, '', ''),
+        ('chmod 0700 /usr/jails/%s/etc/rc.d/ploy.startup_script' % ezjail_name, 0, '', ''),
+        ("""sed -i '' -e 's/\# PROVIDE:.*$/\# PROVIDE: standard_ezjail %s /' /usr/local/etc/ezjail/%s""" % (ezjail_name, ezjail_name), 0, '', ''),
+        ('/usr/local/bin/ezjail-admin start %s' % ezjail_name, 0, '', '')]
     ctrl(['./bin/ploy', 'start', 'foo'])
     assert master_exec.expect == []
     assert len(master_exec.got) == 2
-    assert master_exec.got[0][0] == """sh -c 'cat - > "/usr/jails/foo/etc/startup_script"'"""
+    assert master_exec.got[0][0] == """sh -c 'cat - > "/usr/jails/%s/etc/startup_script"'""" % ezjail_name
     assert master_exec.got[0][1] == ''
-    assert master_exec.got[1][0] == """sh -c 'cat - > "/usr/jails/foo/etc/rc.d/ploy.startup_script"'"""
+    assert master_exec.got[1][0] == """sh -c 'cat - > "/usr/jails/%s/etc/rc.d/ploy.startup_script"'""" % ezjail_name
     assert 'PROVIDE: ploy.startup_script' in master_exec.got[1][1]
     assert caplog_messages(caplog) == [
         "Creating instance 'foo'",
