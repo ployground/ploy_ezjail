@@ -418,7 +418,8 @@ class Master(BaseMaster):
     def ezjail_admin_list_headers(self):
         rc, out, err = self._ezjail_admin('list')
         if rc:
-            raise EzjailError(err.strip())
+            msg = out.strip() + '\n' + err.strip()
+            raise EzjailError(msg.strip())
         lines = out.splitlines()
         if len(lines) < 2:
             raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
@@ -464,18 +465,21 @@ class Master(BaseMaster):
                 kwargs['ip']])
             rc, out, err = self._ezjail_admin(*args)
             if rc:
-                raise EzjailError(err.strip())
+                msg = out.strip() + '\n' + err.strip()
+                raise EzjailError(msg.strip())
         elif command == 'delete':
             rc, out, err = self._ezjail_admin(
                 'delete',
                 '-fw',
                 kwargs['name'])
             if rc:
-                raise EzjailError(err.strip())
+                msg = out.strip() + '\n' + err.strip()
+                raise EzjailError(msg.strip())
         elif command == 'list':
             rc, out, err = self._ezjail_admin('list')
             if rc:
-                raise EzjailError(err.strip())
+                msg = out.strip() + '\n' + err.strip()
+                raise EzjailError(msg.strip())
             lines = out.splitlines()
             if len(lines) < 2:
                 raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
@@ -493,13 +497,15 @@ class Master(BaseMaster):
                 'start',
                 kwargs['name'])
             if rc:
-                raise EzjailError(err.strip())
+                msg = out.strip() + '\n' + err.strip()
+                raise EzjailError(msg.strip())
         elif command == 'stop':
             rc, out, err = self._ezjail_admin(
                 'stop',
                 kwargs['name'])
             if rc:
-                raise EzjailError(err.strip())
+                msg = out.strip() + '\n' + err.strip()
+                raise EzjailError(msg.strip())
         else:
             raise ValueError("Unknown command '%s'" % command)
 

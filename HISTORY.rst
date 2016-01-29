@@ -4,6 +4,9 @@ Changelog
 1.5.0 - Unreleased
 ------------------
 
+* Output stdout in addition to stderr on various errors. This let's one see
+  additional debug info when jails don't start.
+  [fschulze]
 
 
 1.4.0 - 2015-10-16
