@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 try:
     from StringIO import StringIO
 except ImportError:  # pragma: nocover

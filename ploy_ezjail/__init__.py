@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from collections import OrderedDict
 from fnmatch import fnmatch
 from lazy import lazy
 from ploy.common import BaseMaster, Executor, StartupScriptMixin
@@ -6,6 +8,7 @@ from ploy.config import BaseMassager, value_asbool
 from ploy.plain import Instance as PlainInstance
 from ploy.proxy import ProxyInstance
 import logging
+import paramiko
 import re
 import socket
 import sys
@@ -123,10 +126,10 @@ class Instance(PlainInstance, StartupScriptMixin):
         status = self._status()
         if status == 'unavailable':
             log.error("Instance '%s' unavailable", self.id)
-            raise self.paramiko.SSHException()
+            raise paramiko.SSHException()
         if status != 'running':
             log.error("Instance state: %s", status)
-            raise self.paramiko.SSHException()
+            raise paramiko.SSHException()
         if 'proxyhost' not in self.config:
             self.config['proxyhost'] = self.master.id
         if 'proxycommand' not in self.config:
@@ -567,7 +570,7 @@ class MountsMassager(BaseMassager):
             mount_options = line.split()
             if not len(mount_options):
                 continue
-            options = {}
+            options = OrderedDict()
             for mount_option in mount_options:
                 if '=' not in mount_option:
                     raise ValueError("Mount option '%s' contains no equal sign." % mount_option)

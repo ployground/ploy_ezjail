@@ -1,9 +1,11 @@
 Changelog
 =========
 
-1.5.2 - Unreleased
+2.0.0 - Unreleased
 ------------------
 
+* Support for ploy 2.0.0.
+  [fschulze]
 
 
 1.5.1 - 2018-02-03

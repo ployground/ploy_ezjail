@@ -7,7 +7,7 @@ README = open(os.path.join(here, 'README.rst')).read()
 HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 
 
-version = "1.5.2.dev0"
+version = "2.0.0.dev0"
 
 
 setup(
@@ -22,9 +22,10 @@ setup(
     classifiers=[
         'Environment :: Console',
         'Intended Audience :: System Administrators',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: System :: Installation/Setup',
         'Topic :: System :: Systems Administration'],
     include_package_data=True,
@@ -32,8 +33,9 @@ setup(
     packages=['ploy_ezjail'],
     install_requires=[
         'setuptools',
-        'ploy >= 1.2.0, < 2dev',
+        'ploy >= 2dev',
         'lazy'],
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     entry_points="""
         [ploy.plugins]
         ezjail = ploy_ezjail:plugin
