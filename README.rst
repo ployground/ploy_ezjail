@@ -63,6 +63,16 @@ Options
 
 ``ip``
   The ip address to use for the jail.
+
+  This can either be a single IPv4 address::
+
+      ip = 10.0.0.3
+
+  or any number of IPv4 and IPv6 addresses attached to different devices::
+
+      ip = lo1|10.0.0.3,vtnet0|2a03:b0c0:3:d0::3a4d:c002
+
+  The latter format is `ezjail's<http://erdgeist.org/arts/software/ezjail/>`_ own.
   **Required**
 
 ``flavour``
