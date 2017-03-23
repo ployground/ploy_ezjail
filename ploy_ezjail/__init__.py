@@ -60,8 +60,16 @@ class Instance(PlainInstance, StartupScriptMixin):
             sys.exit(1)
         return sid
 
+    def get_ip(self):
+        first_ip = self.config['ip']
+        if ',' in first_ip:
+            first_ip = first_ip.split(',')[0]
+        if '|' in first_ip:
+            first_ip = first_ip.split('|')[1]
+        return first_ip
+
     def get_host(self):
-        return self.config.get('host', self.config['ip'])
+        return self.config.get('host', self.get_ip())
 
     def get_fingerprint(self):
         status = self._status()
@@ -485,12 +493,20 @@ class Master(BaseMaster):
                 raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
             headers = self.ezjail_admin_list_headers
             jails = {}
+            prev_entry = None
             for line in lines[2:]:
                 line = line.strip()
                 if not line:
                     continue
-                entry = dict(zip(headers, line.split()))
-                jails[entry.pop('name')] = entry
+                if line.startswith('N/A') or line[0].isdigit():
+                    # What if prev_entry is still None?
+                    # the code fail here and someone who finds that failure
+                    # will provide us with a patch!
+                    jails[prev_entry]['ip'] = [jails[prev_entry]['ip'], line.split()[1]]
+                else:
+                    entry = dict(zip(headers, line.split()))
+                    prev_entry = entry.pop('name')
+                    jails[prev_entry] = entry
             return jails
         elif command == 'start':
             rc, out, err = self._ezjail_admin(
