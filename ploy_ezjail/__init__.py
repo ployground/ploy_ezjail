@@ -369,7 +369,7 @@ class EzjailProxyInstance(ProxyInstance):
                 if sid == self.id:
                     continue
                 instance = self.master.instances[sid]
-                unknown.remove(instance._name)
+                unknown.discard(instance._name)
                 status = instance._status(jails)
                 sip = instance.config.get('ip', '')
                 jip = jails.get(instance._name, {}).get('ip', 'unknown ip')

@@ -4,6 +4,9 @@ Changelog
 1.5.0 - Unreleased
 ------------------
 
+* Fix jail host ``status`` command for various cases.
+  [fschulze]
+
 * Output stdout in addition to stderr on various errors. This let's one see
   additional debug info when jails don't start.
   [fschulze]

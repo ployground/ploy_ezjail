@@ -162,3 +162,54 @@ def test_start(ctrl, ezjail_name, master_exec, caplog):
     assert caplog_messages(caplog) == [
         "Creating instance 'foo'",
         "Starting instance 'foo'"]
+
+
+def test_master_status(ctrl, ezjail_name, master_exec, caplog):
+    master_exec.expect = [
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), ''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), '')]
+    ctrl(['./bin/ploy', 'status', 'warden'])
+    assert master_exec.expect == []
+    assert master_exec.got == []
+    assert caplog_messages(caplog) == [
+        'foo                  stopped                10.0.0.1']
+
+
+def test_master_status_jail_not_created(ctrl, ezjail_name, master_exec, caplog):
+    master_exec.expect = [
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), ''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), '')]
+    ctrl(['./bin/ploy', 'status', 'warden'])
+    assert master_exec.expect == []
+    assert master_exec.got == []
+    assert caplog_messages(caplog) == [
+        'foo                  unavailable            10.0.0.1']
+
+
+def test_master_status_unknown_jail(ctrl, ezjail_name, master_exec, caplog):
+    master_exec.expect = [
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': 'ham', 'ip': '10.0.1.1', 'status': 'ZS'}), ''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': 'ham', 'ip': '10.0.1.1', 'status': 'ZS'}), '')]
+    ctrl(['./bin/ploy', 'status', 'warden'])
+    assert master_exec.expect == []
+    assert master_exec.got == []
+    assert caplog_messages(caplog) == [
+        'foo                  unavailable            10.0.0.1',
+        'Unknown jail found: ham                         10.0.1.1']
+
+
+def test_master_status_additional_jail(ctrl, ezjail_name, master_exec, caplog, ployconf):
+    lines = ployconf.content().splitlines()
+    lines.extend([
+        '[ez-instance:ham]',
+        'ip = 10.0.0.2'])
+    ployconf.fill(lines)
+    master_exec.expect = [
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), ''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), '')]
+    ctrl(['./bin/ploy', 'status', 'warden'])
+    assert master_exec.expect == []
+    assert master_exec.got == []
+    assert caplog_messages(caplog) == [
+        'foo                  stopped                10.0.0.1',
+        'ham                  unavailable            10.0.0.2']
