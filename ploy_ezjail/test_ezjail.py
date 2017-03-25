@@ -73,6 +73,7 @@ def ctrl(ployconf, ezjail_name):
         lines.append('ezjail-name = %s' % ezjail_name)
     ployconf.fill(lines)
     ctrl = Controller(configpath=ployconf.directory)
+    ctrl.configfile = ployconf.path
     ctrl.plugins = {'ezjail': ploy_ezjail.plugin}
     return ctrl
 
@@ -138,6 +139,26 @@ def caplog_messages(caplog, level=logging.INFO):
         x.message
         for x in caplog.records()
         if x.levelno >= level]
+
+
+def test_get_host(ctrl, ployconf):
+    lines = ployconf.content().splitlines()
+    lines.extend([
+        '[ez-instance:foo2]',
+        'ip = lo1|10.0.0.2',
+        '[ez-instance:foo3]',
+        'ip = lo1|10.0.0.3,vtnet0|2a03:b0c0:3:d0::3a4d:c002',
+        '[ez-instance:foo4]',
+        'ip = vtnet0|2a03:b0c0:3:d0::3a4d:c002'])
+    ployconf.fill(lines)
+    instance = ctrl.instances['foo']
+    assert instance.get_host() == '10.0.0.1'
+    instance = ctrl.instances['foo2']
+    assert instance.get_host() == '10.0.0.2'
+    instance = ctrl.instances['foo3']
+    assert instance.get_host() == '10.0.0.3'
+    instance = ctrl.instances['foo4']
+    assert instance.get_host() == '2a03:b0c0:3:d0::3a4d:c002'
 
 
 def test_start(ctrl, ezjail_name, master_exec, caplog):
