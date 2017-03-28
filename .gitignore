@@ -2,6 +2,6 @@
 /.coverage
 /.tox/
 /dist/
-/htmlcov/
+/htmlcov*/
 /setuptools_git-*.egg
 
