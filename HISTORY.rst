@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.5.0 - Unreleased
+1.5.0 - 2017-12-17
 ------------------
 
 * Add ``get_fingerprints`` to support host keys with all key types.
