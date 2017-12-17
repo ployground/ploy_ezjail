@@ -1,5 +1,7 @@
+from fnmatch import fnmatch
 from lazy import lazy
 from ploy.common import BaseMaster, Executor, StartupScriptMixin
+from ploy.common import parse_ssh_keygen
 from ploy.config import BaseMassager, value_asbool
 from ploy.plain import Instance as PlainInstance
 from ploy.proxy import ProxyInstance
@@ -82,6 +84,37 @@ class Instance(PlainInstance, StartupScriptMixin):
         rc, out, err = self.master.ezjail_admin('console', name=self._name, cmd='ssh-keygen -lf /etc/ssh/ssh_host_rsa_key.pub')
         info = out.split()
         return info[1]
+
+    def get_fingerprints(self):
+        status = self._status()
+        if status == 'unavailable':
+            log.info("Instance '%s' unavailable", self.id)
+            sys.exit(1)
+        if status != 'running':
+            log.info("Instance state: %s", status)
+            sys.exit(1)
+        result = []
+        rc, out, err = self.master.ezjail_admin(
+            'console', name=self._name,
+            cmd='ls /etc/ssh/')
+        if rc != 0:
+            return result
+        pub_key_names = list(
+            x for x in out.splitlines()
+            if fnmatch(x, 'ssh_host*_key.pub'))
+        for pub_key_name in pub_key_names:
+            rc, out, err = self.master.ezjail_admin(
+                'console', name=self._name,
+                cmd='ssh-keygen -lf /etc/ssh/%s' % pub_key_name)
+            if rc != 0:
+                continue
+            (key,) = parse_ssh_keygen(out)
+            info = dict(
+                fingerprint=key.fingerprint,
+                keylen=key.keylen,
+                keytype=key.keytype)
+            result.append(info)
+        return result
 
     def get_massagers(self):
         return get_instance_massagers()
