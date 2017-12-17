@@ -72,7 +72,7 @@ Options
 
       ip = lo1|10.0.0.3,vtnet0|2a03:b0c0:3:d0::3a4d:c002
 
-  The latter format is `ezjail's<http://erdgeist.org/arts/software/ezjail/>`_ own.
+  The latter format is `ezjail's <http://erdgeist.org/arts/software/ezjail/>`_ own.
   **Required**
 
 ``flavour``
