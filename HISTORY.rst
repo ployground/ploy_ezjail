@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.5.1 - Unreleased
+1.5.1 - 2018-02-03
 ------------------
 
 * Fix startup script for FreeBSD 11.x by replacing dots in it's name with
