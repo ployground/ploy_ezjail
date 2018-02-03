@@ -36,7 +36,7 @@ startup() {
 # Remove traces of ourself
 # N.B.: Do NOT rm $0, it points to /etc/rc
 ##########################
-  rm -f "/etc/rc.d/ploy.startup_script"
+  rm -f "/etc/rc.d/ploy_startup_script"
 
   test -e /etc/startup_script && /etc/startup_script || true
   test -e /etc/startup_script && chmod 0600 /etc/startup_script
@@ -203,7 +203,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                 log.error("Startup script chmod failed.")
                 log.error(err)
                 sys.exit(1)
-            rc_startup_dest = '%s/etc/rc.d/ploy.startup_script' % jail['root']
+            rc_startup_dest = '%s/etc/rc.d/ploy_startup_script' % jail['root']
             rc, out, err = self.master._exec(
                 'sh', '-c', 'cat - > "%s"' % rc_startup_dest,
                 stdin=rc_startup)

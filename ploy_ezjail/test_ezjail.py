@@ -204,8 +204,8 @@ def test_start(ctrl, ezjail_name, master_exec, caplog):
         ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), ''),
         ("""sh -c 'cat - > "/usr/jails/%s/etc/startup_script"'""" % ezjail_name, 0, '', ''),
         ('chmod 0700 /usr/jails/%s/etc/startup_script' % ezjail_name, 0, '', ''),
-        ("""sh -c 'cat - > "/usr/jails/%s/etc/rc.d/ploy.startup_script"'""" % ezjail_name, 0, '', ''),
-        ('chmod 0700 /usr/jails/%s/etc/rc.d/ploy.startup_script' % ezjail_name, 0, '', ''),
+        ("""sh -c 'cat - > "/usr/jails/%s/etc/rc.d/ploy_startup_script"'""" % ezjail_name, 0, '', ''),
+        ('chmod 0700 /usr/jails/%s/etc/rc.d/ploy_startup_script' % ezjail_name, 0, '', ''),
         ("""sed -i '' -e 's/\# PROVIDE:.*$/\# PROVIDE: standard_ezjail %s /' /usr/local/etc/ezjail/%s""" % (ezjail_name, ezjail_name), 0, '', ''),
         ('/usr/local/bin/ezjail-admin start %s' % ezjail_name, 0, '', '')]
     ctrl(['./bin/ploy', 'start', 'foo'])
@@ -213,8 +213,8 @@ def test_start(ctrl, ezjail_name, master_exec, caplog):
     assert len(master_exec.got) == 2
     assert master_exec.got[0][0] == """sh -c 'cat - > "/usr/jails/%s/etc/startup_script"'""" % ezjail_name
     assert master_exec.got[0][1] == ''
-    assert master_exec.got[1][0] == """sh -c 'cat - > "/usr/jails/%s/etc/rc.d/ploy.startup_script"'""" % ezjail_name
-    assert 'PROVIDE: ploy.startup_script' in master_exec.got[1][1]
+    assert master_exec.got[1][0] == """sh -c 'cat - > "/usr/jails/%s/etc/rc.d/ploy_startup_script"'""" % ezjail_name
+    assert 'PROVIDE: ploy_startup_script' in master_exec.got[1][1]
     assert caplog_messages(caplog) == [
         "Creating instance 'foo'",
         "Starting instance 'foo'"]
