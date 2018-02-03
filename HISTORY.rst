@@ -1,6 +1,14 @@
 Changelog
 =========
 
+1.5.1 - Unreleased
+------------------
+
+* Fix startup script for FreeBSD 11.x by replacing dots in it's name with
+  underscores.
+  [fschulze]
+
+
 1.5.0 - 2017-12-17
 ------------------
 

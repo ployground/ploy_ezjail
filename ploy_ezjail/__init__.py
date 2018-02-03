@@ -22,13 +22,13 @@ class EzjailError(Exception):
 rc_startup = """#!/bin/sh
 #
 # BEFORE: DAEMON
-# PROVIDE: ploy.startup_script
+# PROVIDE: ploy_startup_script
 #
 # ploy startup script
 
 . /etc/rc.subr
 
-name=ploy.startup_script
+name=ploy_startup_script
 start_cmd=startup
 
 startup() {
