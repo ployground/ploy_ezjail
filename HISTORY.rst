@@ -1,8 +1,8 @@
 Changelog
 =========
 
-2.0.0 - Unreleased
-------------------
+2.0.0b1 - 2018-02-07
+--------------------
 
 * Support for ploy 2.0.0.
   [fschulze]
