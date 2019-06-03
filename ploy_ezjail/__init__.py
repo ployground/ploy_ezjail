@@ -414,7 +414,7 @@ class EzjailProxyInstance(ProxyInstance):
                 log.info("%-20s %-15s %15s" % (sid, status, sip))
             for sid in sorted(unknown):
                 jip = jails[sid].get('ip', 'unknown ip')
-                log.warn("Unknown jail found: %-20s %15s" % (sid, jip))
+                log.warning("Unknown jail found: %-20s %15s" % (sid, jip))
         return result
 
 
