@@ -231,7 +231,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             "-i",
             "",
             "-e",
-            "s/\# PROVIDE:.*$/\# PROVIDE: standard_ezjail %s %s/" % (self._name, rc_provide),
+            "s/\\# PROVIDE:.*$/\\# PROVIDE: standard_ezjail %s %s/" % (self._name, rc_provide),
             "/usr/local/etc/ezjail/%s" % self._name)
 
         rc_require = self.config.get('rc_require')
@@ -241,7 +241,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                 "-i",
                 "",
                 "-e",
-                "s/\# REQUIRE:.*$/\# REQUIRE: %s/" % rc_require,
+                "s/\\# REQUIRE:.*$/\\# REQUIRE: %s/" % rc_require,
                 "/usr/local/etc/ezjail/%s" % self._name)
 
         mounts = []
