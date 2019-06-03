@@ -71,7 +71,7 @@ def ctrl(ployconf, ezjail_name):
         '[ez-master:warden]',
         '[ez-instance:foo]',
         'ip = 10.0.0.1']
-    if ezjail_name is not 'foo':
+    if ezjail_name != 'foo':
         lines.append('ezjail-name = %s' % ezjail_name)
     ployconf.fill(lines)
     ctrl = Controller(configpath=ployconf.directory)
