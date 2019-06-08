@@ -103,7 +103,7 @@ class Instance(PlainInstance, StartupScriptMixin):
         if rc != 0:
             return result
         pub_key_names = list(
-            x for x in out.splitlines()
+            x for x in out.decode('utf-8').splitlines()
             if fnmatch(x, 'ssh_host*_key.pub'))
         for pub_key_name in pub_key_names:
             rc, out, err = self.master.ezjail_admin(
@@ -111,7 +111,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                 cmd='ssh-keygen -lf /etc/ssh/%s' % pub_key_name)
             if rc != 0:
                 continue
-            (key,) = parse_ssh_keygen(out)
+            (key,) = parse_ssh_keygen(out.decode('utf-8'))
             info = dict(
                 fingerprint=key.fingerprint,
                 keylen=key.keylen,
@@ -265,7 +265,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             jail_root = jail['root'].rstrip('/')
             log.info("Setting up mount points")
             rc, out, err = self.master._exec("head", "-n", "1", jail_fstab)
-            fstab = out.splitlines()
+            fstab = out.decode('utf-8').splitlines()
             fstab = fstab[:1]
             fstab.append('# mount points from ploy')
             for mount in mounts:
@@ -464,7 +464,7 @@ class Master(BaseMaster):
         if rc:
             msg = out.strip() + '\n' + err.strip()
             raise EzjailError(msg.strip())
-        lines = out.splitlines()
+        lines = out.decode('utf-8').splitlines()
         if len(lines) < 2:
             raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
         headers = []
@@ -524,7 +524,7 @@ class Master(BaseMaster):
             if rc:
                 msg = out.strip() + '\n' + err.strip()
                 raise EzjailError(msg.strip())
-            lines = out.splitlines()
+            lines = out.decode('utf-8').splitlines()
             if len(lines) < 2:
                 raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
             headers = self.ezjail_admin_list_headers
