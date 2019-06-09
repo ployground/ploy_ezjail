@@ -1,8 +1,11 @@
 Changelog
 =========
 
-2.0.0b2 - Unreleased
+2.0.0b2 - 2019-06-09
 --------------------
+
+* Some Python 3.x encoding related fixes.
+  [fschulze]
 
 * Drop Python 3.4 support.
   [fschulze]
