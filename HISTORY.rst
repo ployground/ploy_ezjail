@@ -1,6 +1,13 @@
 Changelog
 =========
 
+2.0.0b3 - Unreleased
+--------------------
+
+* Fix ZFS sections for Python 3.
+  [fschulze]
+
+
 2.0.0b2 - 2019-06-09
 --------------------
 

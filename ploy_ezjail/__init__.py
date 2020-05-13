@@ -357,9 +357,9 @@ class ZFS_FS(object):
                 sys.exit(1)
         rc, out, err = self.zfs.master._exec(*mp_args)
         if rc == 0:
-            info = out.strip().split('\t')
-            assert info[0] == 'mountpoint'
-            self.mountpoint = info[1]
+            info = out.strip().split(b'\t')
+            assert info[0] == b'mountpoint'
+            self.mountpoint = info[1].decode('ascii')
             return
         log.error(
             "Trying to use non existing zfs filesystem '%s' at '%s'." % (

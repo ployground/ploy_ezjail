@@ -7,7 +7,7 @@ README = open(os.path.join(here, 'README.rst')).read()
 HISTORY = open(os.path.join(here, 'HISTORY.rst')).read()
 
 
-version = "2.0.0b2"
+version = "2.0.0b3"
 
 
 setup(
