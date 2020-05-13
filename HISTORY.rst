@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.0.0b3 - Unreleased
+2.0.0b3 - 2020-05-13
 --------------------
 
 * Fix ZFS sections for Python 3.
