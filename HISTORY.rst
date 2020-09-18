@@ -1,6 +1,14 @@
 Changelog
 =========
 
+2.0.0b4 - Unreleased
+--------------------
+
+* Use full instance name for logging in ``init_ssh_key`` for easier debugging
+  in case of multiple masters.
+  [fschulze]
+
+
 2.0.0b3 - 2020-05-13
 --------------------
 
