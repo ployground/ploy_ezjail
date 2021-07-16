@@ -462,8 +462,8 @@ class Master(BaseMaster):
     def ezjail_admin_list_headers(self):
         rc, out, err = self._ezjail_admin('list')
         if rc:
-            msg = out.strip() + '\n' + err.strip()
-            raise EzjailError(msg.strip())
+            msg = out.strip() + b'\n' + err.strip()
+            raise EzjailError(msg.decode('utf-8').strip())
         lines = out.decode('utf-8').splitlines()
         if len(lines) < 2:
             raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
@@ -509,21 +509,21 @@ class Master(BaseMaster):
                 kwargs['ip']])
             rc, out, err = self._ezjail_admin(*args)
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
         elif command == 'delete':
             rc, out, err = self._ezjail_admin(
                 'delete',
                 '-fw',
                 kwargs['name'])
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
         elif command == 'list':
             rc, out, err = self._ezjail_admin('list')
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
             lines = out.decode('utf-8').splitlines()
             if len(lines) < 2:
                 raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
@@ -549,15 +549,15 @@ class Master(BaseMaster):
                 'start',
                 kwargs['name'])
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
         elif command == 'stop':
             rc, out, err = self._ezjail_admin(
                 'stop',
                 kwargs['name'])
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
         else:
             raise ValueError("Unknown command '%s'" % command)
 

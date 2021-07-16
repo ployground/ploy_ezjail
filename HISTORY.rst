@@ -4,6 +4,9 @@ Changelog
 2.0.0b4 - Unreleased
 --------------------
 
+* Fix Python 3.x encoding errors when reporting errors from ezjail commands.
+  [fschulze]
+
 * Use full instance name for logging in ``init_ssh_key`` for easier debugging
   in case of multiple masters.
   [fschulze]
