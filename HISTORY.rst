@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.0.0b4 - Unreleased
+2.0.0b4 - 2021-07-16
 --------------------
 
 * Fix Python 3.x encoding errors when reporting errors from ezjail commands.
