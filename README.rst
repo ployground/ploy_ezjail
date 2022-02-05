@@ -51,6 +51,11 @@ Options
 ``sudo``
   Use ``sudo`` to run commands on the host.
 
+``ezjail-use-one-prefix``
+  Use ``one`` prefix for ``start`` and ``stop`` commands.
+  This is useful when ``ezjail_enable="NO"`` is set in ``/etc/rc.conf``.
+  **Optional**
+
 
 Instances
 =========

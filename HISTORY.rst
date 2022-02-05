@@ -10,6 +10,9 @@ Changelog
 * Add support for jail specific settings.
   [fschulze]
 
+* Add ``ezjail-use-one-prefix`` option.
+  [fschulze]
+
 
 2.0.0b4 - 2021-07-16
 --------------------

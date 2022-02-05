@@ -442,6 +442,7 @@ class Master(BaseMaster):
     def __init__(self, *args, **kwargs):
         BaseMaster.__init__(self, *args, **kwargs)
         self.debug = self.master_config.get('debug-commands', False)
+        self.use_one_prefix = self.master_config.get('ezjail-use-one-prefix', False)
         if 'instance' not in self.master_config:
             instance = PlainInstance(self, self.id, self.master_config)
         else:
@@ -469,6 +470,10 @@ class Master(BaseMaster):
         return binary
 
     def _ezjail_admin(self, *args):
+        if self.use_one_prefix:
+            args = list(args)
+            if args[0] in ('start', 'stop'):
+                args[0] = 'one' + args[0]
         try:
             return self._exec(self.ezjail_admin_binary, *args)
         except socket.error as e:
