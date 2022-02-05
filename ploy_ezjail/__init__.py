@@ -532,6 +532,7 @@ class Master(BaseMaster):
             if len(lines) < 2:
                 raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
             headers = self.ezjail_admin_list_headers
+            padding = [''] * len(headers)
             jails = {}
             prev_entry = None
             for line in lines[2:]:
@@ -544,7 +545,7 @@ class Master(BaseMaster):
                     # will provide us with a patch!
                     jails[prev_entry]['ip'] = [jails[prev_entry]['ip'], line.split()[1]]
                 else:
-                    entry = dict(zip(headers, line.split()))
+                    entry = dict(zip(headers, line.split() + padding))
                     prev_entry = entry.pop('name')
                     jails[prev_entry] = entry
             return jails
