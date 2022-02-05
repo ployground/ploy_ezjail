@@ -2,7 +2,11 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from fnmatch import fnmatch
 from lazy import lazy
-from ploy.common import BaseMaster, Executor, StartupScriptMixin
+from ploy.common import BaseMaster, StartupScriptMixin
+try:
+    from ploy.common import InstanceExecutor
+except ImportError:
+    from ploy.common import Executor as InstanceExecutor
 from ploy.common import parse_ssh_keygen
 from ploy.config import BaseMassager, value_asbool
 from ploy.plain import Instance as PlainInstance
@@ -440,7 +444,7 @@ class Master(BaseMaster):
         if self.master_config.get('sudo'):
             prefix_args = ('sudo',)
         if self._exec is None:
-            self._exec = Executor(
+            self._exec = InstanceExecutor(
                 instance=self.instance, prefix_args=prefix_args)
 
     @lazy
