@@ -1,6 +1,13 @@
 Changelog
 =========
 
+2.0.0b5 - Unreleased
+--------------------
+
+* Add ``rc_before`` option.
+  [fschulze]
+
+
 2.0.0b4 - 2021-07-16
 --------------------
 

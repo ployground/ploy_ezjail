@@ -175,6 +175,19 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instances jail name: %s" % self._name)
         log.info("Instances jail ip: %s" % jails[self._name]['ip'])
 
+    def _get_jail_config_rc(self, name):
+        name = name.lower()
+        value = self.config.get('rc_%s' % name)
+        if name == 'provide':
+            result = ['standard_ezjail', self._name]
+            if value is not None:
+                result.append(value)
+        elif value is None:
+            return
+        else:
+            result = [value]
+        return " ".join(result)
+
     def start(self, overrides=None):
         jails = self.master.ezjail_admin('list')
         status = self._status(jails)
@@ -229,24 +242,13 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instance already started")
             return True
 
-        rc_provide = self.config.get('rc_provide', '')
-        self.master._exec(
-            "sed",
-            "-i",
-            "",
-            "-e",
-            "s/\\# PROVIDE:.*$/\\# PROVIDE: standard_ezjail %s %s/" % (self._name, rc_provide),
-            "/usr/local/etc/ezjail/%s" % self._name)
-
-        rc_require = self.config.get('rc_require')
-        if rc_require is not None:
-            self.master._exec(
-                "sed",
-                "-i",
-                "",
-                "-e",
-                "s/\\# REQUIRE:.*$/\\# REQUIRE: %s/" % rc_require,
-                "/usr/local/etc/ezjail/%s" % self._name)
+        for rc_name in ('BEFORE', 'PROVIDE', 'REQUIRE'):
+            rc_value = self._get_jail_config_rc(rc_name)
+            if rc_value is not None:
+                self.master._exec(
+                    "sed", "-i", "", "-e",
+                    "s/\\# %s:.*$/\\# %s: %s/" % (rc_name, rc_name, rc_value),
+                    "/usr/local/etc/ezjail/%s" % self._name)
 
         mounts = []
         for mount in self.config.get('mounts', []):

@@ -124,6 +124,12 @@ Options
   This value is written upon each startup of the jail not just when it is created initially, so to have changes take effect, it's sufficient to restart it.
   **Optional**
 
+``rc_before``
+  String that indicates before which other jails this jail should start up, effectively allowing you to define the startup order of jails.
+  See ``rcorder(8)`` for more details.
+  This value is written upon each startup of the jail not just when it is created initially, so to have changes take effect, it's sufficient to restart it.
+  **Optional**
+
 
 ZFS sections
 ============
