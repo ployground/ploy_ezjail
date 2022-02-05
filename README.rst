@@ -130,6 +130,11 @@ Options
   This value is written upon each startup of the jail not just when it is created initially, so to have changes take effect, it's sufficient to restart it.
   **Optional**
 
+``jail_*``
+  Allows to set jail specific setting. For example ``jail_devfs_ruleset="5"`` to use devfs ruleset number 5 for this jail.
+  See ``man ezjail`` "Per-Jail options" (skip the ``JAILNAME`` part from the option names).
+  **Optional**
+
 
 ZFS sections
 ============

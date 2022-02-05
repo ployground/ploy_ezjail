@@ -7,6 +7,9 @@ Changelog
 * Add ``rc_before`` option.
   [fschulze]
 
+* Add support for jail specific settings.
+  [fschulze]
+
 
 2.0.0b4 - 2021-07-16
 --------------------

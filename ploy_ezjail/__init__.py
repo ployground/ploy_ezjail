@@ -250,6 +250,16 @@ class Instance(PlainInstance, StartupScriptMixin):
                     "s/\\# %s:.*$/\\# %s: %s/" % (rc_name, rc_name, rc_value),
                     "/usr/local/etc/ezjail/%s" % self._name)
 
+        for key in self.config.keys():
+            if not key.startswith('jail_'):
+                continue
+            export_value = self.config[key]
+            export_name = key.replace('jail_', 'jail_%s_' % self._name, 1)
+            self.master._exec(
+                "sed", "-i", "", "-e",
+                "s/^export %s=.*$/export %s=\"%s\"/" % (export_name, export_name, export_value),
+                "/usr/local/etc/ezjail/%s" % self._name)
+
         mounts = []
         for mount in self.config.get('mounts', []):
             src = mount['src'].format(
