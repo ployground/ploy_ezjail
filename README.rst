@@ -80,7 +80,7 @@ Options
   The latter format is `ezjail's <http://erdgeist.org/arts/software/ezjail/>`_ own.
   **Required**
 
-``flavour``
+``ezjail-flavour``
   The **flavour** to use for this jail. This is explained in the `ezjail docs <http://erdgeist.org/arts/software/ezjail/>`_.
 
 ``ezjail-name``

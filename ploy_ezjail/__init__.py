@@ -199,11 +199,17 @@ class Instance(PlainInstance, StartupScriptMixin):
                 log.error("No IP address set for instance '%s'", self.id)
                 sys.exit(1)
             try:
+                flavour = self.config.get('ezjail-flavour')
+                if 'ezjail-flavour' not in self.config and 'flavour' in self.config:
+                    # TODO deprecate
+                    flavour = self.config.get('flavour')
+                if not flavour:
+                    flavour = None
                 self.master.ezjail_admin(
                     'create',
                     name=self._name,
                     ip=self.config['ip'],
-                    flavour=self.config.get('flavour'))
+                    flavour=flavour)
             except EzjailError as e:
                 for line in e.args[0].splitlines():
                     log.error(line)

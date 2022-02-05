@@ -13,6 +13,10 @@ Changelog
 * Add ``ezjail-use-one-prefix`` option.
   [fschulze]
 
+* Renamed ``flavour`` option to ``ezjail-flavour``.
+  The old one still works, but will be deprecated in the future.
+  [fschulze]
+
 
 2.0.0b4 - 2021-07-16
 --------------------
