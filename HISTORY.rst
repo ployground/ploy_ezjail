@@ -4,6 +4,12 @@ Changelog
 2.0.0b5 - Unreleased
 --------------------
 
+* Dropped support for Python 3.6.
+  [fschulze]
+
+* Added support for Python 3.10.
+  [fschulze]
+
 * Add ``rc_before`` option.
   [fschulze]
 
