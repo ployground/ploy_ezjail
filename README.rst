@@ -51,6 +51,11 @@ Options
 ``sudo``
   Use ``sudo`` to run commands on the host.
 
+``ezjail-use-one-prefix``
+  Use ``one`` prefix for ``start`` and ``stop`` commands.
+  This is useful when ``ezjail_enable="NO"`` is set in ``/etc/rc.conf``.
+  **Optional**
+
 
 Instances
 =========
@@ -75,7 +80,7 @@ Options
   The latter format is `ezjail's <http://erdgeist.org/arts/software/ezjail/>`_ own.
   **Required**
 
-``flavour``
+``ezjail-flavour``
   The **flavour** to use for this jail. This is explained in the `ezjail docs <http://erdgeist.org/arts/software/ezjail/>`_.
 
 ``ezjail-name``
@@ -122,6 +127,17 @@ Options
   IOW if you simply want to build a startup order using the names of the jails, you will not need to set this value.
   If you want this jail to provide any additional values, set them here.
   This value is written upon each startup of the jail not just when it is created initially, so to have changes take effect, it's sufficient to restart it.
+  **Optional**
+
+``rc_before``
+  String that indicates before which other jails this jail should start up, effectively allowing you to define the startup order of jails.
+  See ``rcorder(8)`` for more details.
+  This value is written upon each startup of the jail not just when it is created initially, so to have changes take effect, it's sufficient to restart it.
+  **Optional**
+
+``jail_*``
+  Allows to set jail specific setting. For example ``jail_devfs_ruleset="5"`` to use devfs ruleset number 5 for this jail.
+  See ``man ezjail`` "Per-Jail options" (skip the ``JAILNAME`` part from the option names).
   **Optional**
 
 

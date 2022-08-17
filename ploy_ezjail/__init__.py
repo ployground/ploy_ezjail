@@ -1,11 +1,18 @@
+from __future__ import unicode_literals
+from collections import OrderedDict
 from fnmatch import fnmatch
 from lazy import lazy
-from ploy.common import BaseMaster, Executor, StartupScriptMixin
+from ploy.common import BaseMaster, StartupScriptMixin
+try:
+    from ploy.common import InstanceExecutor
+except ImportError:
+    from ploy.common import Executor as InstanceExecutor
 from ploy.common import parse_ssh_keygen
 from ploy.config import BaseMassager, value_asbool
 from ploy.plain import Instance as PlainInstance
 from ploy.proxy import ProxyInstance
 import logging
+import paramiko
 import re
 import socket
 import sys
@@ -100,7 +107,7 @@ class Instance(PlainInstance, StartupScriptMixin):
         if rc != 0:
             return result
         pub_key_names = list(
-            x for x in out.splitlines()
+            x for x in out.decode('utf-8').splitlines()
             if fnmatch(x, 'ssh_host*_key.pub'))
         for pub_key_name in pub_key_names:
             rc, out, err = self.master.ezjail_admin(
@@ -108,7 +115,7 @@ class Instance(PlainInstance, StartupScriptMixin):
                 cmd='ssh-keygen -lf /etc/ssh/%s' % pub_key_name)
             if rc != 0:
                 continue
-            (key,) = parse_ssh_keygen(out)
+            (key,) = parse_ssh_keygen(out.decode('utf-8'))
             info = dict(
                 fingerprint=key.fingerprint,
                 keylen=key.keylen,
@@ -122,11 +129,11 @@ class Instance(PlainInstance, StartupScriptMixin):
     def init_ssh_key(self, user=None):
         status = self._status()
         if status == 'unavailable':
-            log.error("Instance '%s' unavailable", self.id)
-            raise self.paramiko.SSHException()
+            log.error("Instance '%s' unavailable", self.uid)
+            raise paramiko.SSHException()
         if status != 'running':
-            log.error("Instance state: %s", status)
-            raise self.paramiko.SSHException()
+            log.error("Instance state for '%s': %s", self.uid, status)
+            raise paramiko.SSHException()
         if 'proxyhost' not in self.config:
             self.config['proxyhost'] = self.master.id
         if 'proxycommand' not in self.config:
@@ -168,6 +175,19 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instances jail name: %s" % self._name)
         log.info("Instances jail ip: %s" % jails[self._name]['ip'])
 
+    def _get_jail_config_rc(self, name):
+        name = name.lower()
+        value = self.config.get('rc_%s' % name)
+        if name == 'provide':
+            result = ['standard_ezjail', self._name]
+            if value is not None:
+                result.append(value)
+        elif value is None:
+            return
+        else:
+            result = [value]
+        return " ".join(result)
+
     def start(self, overrides=None):
         jails = self.master.ezjail_admin('list')
         status = self._status(jails)
@@ -179,11 +199,17 @@ class Instance(PlainInstance, StartupScriptMixin):
                 log.error("No IP address set for instance '%s'", self.id)
                 sys.exit(1)
             try:
+                flavour = self.config.get('ezjail-flavour')
+                if 'ezjail-flavour' not in self.config and 'flavour' in self.config:
+                    # TODO deprecate
+                    flavour = self.config.get('flavour')
+                if not flavour:
+                    flavour = None
                 self.master.ezjail_admin(
                     'create',
                     name=self._name,
                     ip=self.config['ip'],
-                    flavour=self.config.get('flavour'))
+                    flavour=flavour)
             except EzjailError as e:
                 for line in e.args[0].splitlines():
                     log.error(line)
@@ -222,23 +248,22 @@ class Instance(PlainInstance, StartupScriptMixin):
             log.info("Instance already started")
             return True
 
-        rc_provide = self.config.get('rc_provide', '')
-        self.master._exec(
-            "sed",
-            "-i",
-            "",
-            "-e",
-            "s/\# PROVIDE:.*$/\# PROVIDE: standard_ezjail %s %s/" % (self._name, rc_provide),
-            "/usr/local/etc/ezjail/%s" % self._name)
+        for rc_name in ('BEFORE', 'PROVIDE', 'REQUIRE'):
+            rc_value = self._get_jail_config_rc(rc_name)
+            if rc_value is not None:
+                self.master._exec(
+                    "sed", "-i", "", "-e",
+                    "s/\\# %s:.*$/\\# %s: %s/" % (rc_name, rc_name, rc_value),
+                    "/usr/local/etc/ezjail/%s" % self._name)
 
-        rc_require = self.config.get('rc_require')
-        if rc_require is not None:
+        for key in self.config.keys():
+            if not key.startswith('jail_'):
+                continue
+            export_value = self.config[key]
+            export_name = key.replace('jail_', 'jail_%s_' % self._name, 1)
             self.master._exec(
-                "sed",
-                "-i",
-                "",
-                "-e",
-                "s/\# REQUIRE:.*$/\# REQUIRE: %s/" % rc_require,
+                "sed", "-i", "", "-e",
+                "s/^export %s=.*$/export %s=\"%s\"/" % (export_name, export_name, export_value),
                 "/usr/local/etc/ezjail/%s" % self._name)
 
         mounts = []
@@ -262,7 +287,7 @@ class Instance(PlainInstance, StartupScriptMixin):
             jail_root = jail['root'].rstrip('/')
             log.info("Setting up mount points")
             rc, out, err = self.master._exec("head", "-n", "1", jail_fstab)
-            fstab = out.splitlines()
+            fstab = out.decode('utf-8').splitlines()
             fstab = fstab[:1]
             fstab.append('# mount points from ploy')
             for mount in mounts:
@@ -354,9 +379,9 @@ class ZFS_FS(object):
                 sys.exit(1)
         rc, out, err = self.zfs.master._exec(*mp_args)
         if rc == 0:
-            info = out.strip().split('\t')
-            assert info[0] == 'mountpoint'
-            self.mountpoint = info[1]
+            info = out.strip().split(b'\t')
+            assert info[0] == b'mountpoint'
+            self.mountpoint = info[1].decode('ascii')
             return
         log.error(
             "Trying to use non existing zfs filesystem '%s' at '%s'." % (
@@ -411,7 +436,7 @@ class EzjailProxyInstance(ProxyInstance):
                 log.info("%-20s %-15s %15s" % (sid, status, sip))
             for sid in sorted(unknown):
                 jip = jails[sid].get('ip', 'unknown ip')
-                log.warn("Unknown jail found: %-20s %15s" % (sid, jip))
+                log.warning("Unknown jail found: %-20s %15s" % (sid, jip))
         return result
 
 
@@ -423,6 +448,7 @@ class Master(BaseMaster):
     def __init__(self, *args, **kwargs):
         BaseMaster.__init__(self, *args, **kwargs)
         self.debug = self.master_config.get('debug-commands', False)
+        self.use_one_prefix = self.master_config.get('ezjail-use-one-prefix', False)
         if 'instance' not in self.master_config:
             instance = PlainInstance(self, self.id, self.master_config)
         else:
@@ -437,7 +463,7 @@ class Master(BaseMaster):
         if self.master_config.get('sudo'):
             prefix_args = ('sudo',)
         if self._exec is None:
-            self._exec = Executor(
+            self._exec = InstanceExecutor(
                 instance=self.instance, prefix_args=prefix_args)
 
     @lazy
@@ -450,6 +476,10 @@ class Master(BaseMaster):
         return binary
 
     def _ezjail_admin(self, *args):
+        if self.use_one_prefix:
+            args = list(args)
+            if args[0] in ('start', 'stop'):
+                args[0] = 'one' + args[0]
         try:
             return self._exec(self.ezjail_admin_binary, *args)
         except socket.error as e:
@@ -459,9 +489,9 @@ class Master(BaseMaster):
     def ezjail_admin_list_headers(self):
         rc, out, err = self._ezjail_admin('list')
         if rc:
-            msg = out.strip() + '\n' + err.strip()
-            raise EzjailError(msg.strip())
-        lines = out.splitlines()
+            msg = out.strip() + b'\n' + err.strip()
+            raise EzjailError(msg.decode('utf-8').strip())
+        lines = out.decode('utf-8').splitlines()
         if len(lines) < 2:
             raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
         headers = []
@@ -506,25 +536,26 @@ class Master(BaseMaster):
                 kwargs['ip']])
             rc, out, err = self._ezjail_admin(*args)
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
         elif command == 'delete':
             rc, out, err = self._ezjail_admin(
                 'delete',
                 '-fw',
                 kwargs['name'])
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
         elif command == 'list':
             rc, out, err = self._ezjail_admin('list')
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
-            lines = out.splitlines()
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
+            lines = out.decode('utf-8').splitlines()
             if len(lines) < 2:
                 raise EzjailError("ezjail-admin list output too short:\n%s" % out.strip())
             headers = self.ezjail_admin_list_headers
+            padding = [''] * len(headers)
             jails = {}
             prev_entry = None
             for line in lines[2:]:
@@ -537,7 +568,7 @@ class Master(BaseMaster):
                     # will provide us with a patch!
                     jails[prev_entry]['ip'] = [jails[prev_entry]['ip'], line.split()[1]]
                 else:
-                    entry = dict(zip(headers, line.split()))
+                    entry = dict(zip(headers, line.split() + padding))
                     prev_entry = entry.pop('name')
                     jails[prev_entry] = entry
             return jails
@@ -546,15 +577,15 @@ class Master(BaseMaster):
                 'start',
                 kwargs['name'])
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
         elif command == 'stop':
             rc, out, err = self._ezjail_admin(
                 'stop',
                 kwargs['name'])
             if rc:
-                msg = out.strip() + '\n' + err.strip()
-                raise EzjailError(msg.strip())
+                msg = out.strip() + b'\n' + err.strip()
+                raise EzjailError(msg.decode('utf-8').strip())
         else:
             raise ValueError("Unknown command '%s'" % command)
 
@@ -567,7 +598,7 @@ class MountsMassager(BaseMassager):
             mount_options = line.split()
             if not len(mount_options):
                 continue
-            options = {}
+            options = OrderedDict()
             for mount_option in mount_options:
                 if '=' not in mount_option:
                     raise ValueError("Mount option '%s' contains no equal sign." % mount_option)

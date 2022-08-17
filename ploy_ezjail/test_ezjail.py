@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 try:
     from StringIO import StringIO
 except ImportError:  # pragma: nocover
@@ -98,7 +99,7 @@ class MasterExec:
         try:
             expected = self.expect.pop(0)
         except IndexError:  # pragma: no cover - only on failures
-            expected = ('', 0, '', '')
+            expected = ('', 0, b'', b'')
         cmd_args, rc, out, err = expected
         assert cmd == cmd_args
         if stdin is not None:
@@ -139,7 +140,7 @@ def ezjail_list(*jails):
             ip = "%s               " % jail.get('ip', "10.0.0.%d" % fake_id)
             lines.append('%s %s %s %s %s' % (
                 status[:3], jid[:4], ip[:15], hostname[:30], root))
-    return '\n'.join(lines)
+    return '\n'.join(lines).encode('utf-8')
 
 
 def caplog_messages(caplog, level=logging.INFO):
@@ -152,11 +153,11 @@ def caplog_messages(caplog, level=logging.INFO):
 def test_ezjail_list_helper():
     assert ezjail_list() == textwrap.dedent("""\
         STA JID  IP              Hostname                       Root Directory
-        --- ---- --------------- ------------------------------ ------------------------""")
+        --- ---- --------------- ------------------------------ ------------------------""").encode('utf-8')
     assert ezjail_list({'name': 'foo', 'status': 'ZS'}) == textwrap.dedent("""\
         STA JID  IP              Hostname                       Root Directory
         --- ---- --------------- ------------------------------ ------------------------
-        ZS  73   10.0.0.73       foo                            /usr/jails/foo""")
+        ZS  73   10.0.0.73       foo                            /usr/jails/foo""").encode('utf-8')
     assert ezjail_list({
         'name': 'foo',
         'ip': ['10.0.0.1', 'vtnet0|2a03:b0c0:3:d0::3a4d:c002'],
@@ -164,7 +165,7 @@ def test_ezjail_list_helper():
             STA JID  IP              Hostname                       Root Directory
             --- ---- --------------- ------------------------------ ------------------------
             ZS  73   10.0.0.1        foo                            /usr/jails/foo
-                73   vtnet0|2a03:b0c0:3:d0::3a4d:c002""")
+                73   vtnet0|2a03:b0c0:3:d0::3a4d:c002""").encode('utf-8')
     assert ezjail_list({
         'name': 'foo',
         'ip': ['10.0.0.1', 'em0|148.73.5.8', 'vtnet0|2a03:b0c0:3:d0::3a4d:c002'],
@@ -173,7 +174,7 @@ def test_ezjail_list_helper():
             --- ---- --------------- ------------------------------ ------------------------
             ZS  73   10.0.0.1        foo                            /usr/jails/foo
                 73   em0|148.73.5.8
-                73   vtnet0|2a03:b0c0:3:d0::3a4d:c002""")
+                73   vtnet0|2a03:b0c0:3:d0::3a4d:c002""").encode('utf-8')
 
 
 def test_get_host(ctrl, ployconf):
@@ -198,16 +199,16 @@ def test_get_host(ctrl, ployconf):
 
 def test_start(ctrl, ezjail_name, master_exec, caplog):
     master_exec.expect = [
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), ''),
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), ''),
-        ('/usr/local/bin/ezjail-admin create -c zfs %s 10.0.0.1' % ezjail_name, 0, '', ''),
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), ''),
-        ("""sh -c 'cat - > "/usr/jails/%s/etc/startup_script"'""" % ezjail_name, 0, '', ''),
-        ('chmod 0700 /usr/jails/%s/etc/startup_script' % ezjail_name, 0, '', ''),
-        ("""sh -c 'cat - > "/usr/jails/%s/etc/rc.d/ploy_startup_script"'""" % ezjail_name, 0, '', ''),
-        ('chmod 0700 /usr/jails/%s/etc/rc.d/ploy_startup_script' % ezjail_name, 0, '', ''),
-        ("""sed -i '' -e 's/\# PROVIDE:.*$/\# PROVIDE: standard_ezjail %s /' /usr/local/etc/ezjail/%s""" % (ezjail_name, ezjail_name), 0, '', ''),
-        ('/usr/local/bin/ezjail-admin start %s' % ezjail_name, 0, '', '')]
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), b''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), b''),
+        ('/usr/local/bin/ezjail-admin create -c zfs %s 10.0.0.1' % ezjail_name, 0, b'', b''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), b''),
+        ("""sh -c 'cat - > "/usr/jails/%s/etc/startup_script"'""" % ezjail_name, 0, b'', b''),
+        ('chmod 0700 /usr/jails/%s/etc/startup_script' % ezjail_name, 0, b'', b''),
+        ("""sh -c 'cat - > "/usr/jails/%s/etc/rc.d/ploy_startup_script"'""" % ezjail_name, 0, b'', b''),
+        ('chmod 0700 /usr/jails/%s/etc/rc.d/ploy_startup_script' % ezjail_name, 0, b'', b''),
+        ("""sed -i '' -e 's/\\# PROVIDE:.*$/\\# PROVIDE: standard_ezjail %s/' /usr/local/etc/ezjail/%s""" % (ezjail_name, ezjail_name), 0, b'', b''),
+        ('/usr/local/bin/ezjail-admin start %s' % ezjail_name, 0, b'', b'')]
     ctrl(['./bin/ploy', 'start', 'foo'])
     assert master_exec.expect == []
     assert len(master_exec.got) == 2
@@ -222,8 +223,8 @@ def test_start(ctrl, ezjail_name, master_exec, caplog):
 
 def test_master_status(ctrl, ezjail_name, master_exec, caplog):
     master_exec.expect = [
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), ''),
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), '')]
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), b''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), b'')]
     ctrl(['./bin/ploy', 'status', 'warden'])
     assert master_exec.expect == []
     assert master_exec.got == []
@@ -233,8 +234,8 @@ def test_master_status(ctrl, ezjail_name, master_exec, caplog):
 
 def test_master_status_jail_not_created(ctrl, ezjail_name, master_exec, caplog):
     master_exec.expect = [
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), ''),
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), '')]
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), b''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list(), b'')]
     ctrl(['./bin/ploy', 'status', 'warden'])
     assert master_exec.expect == []
     assert master_exec.got == []
@@ -244,8 +245,8 @@ def test_master_status_jail_not_created(ctrl, ezjail_name, master_exec, caplog):
 
 def test_master_status_unknown_jail(ctrl, ezjail_name, master_exec, caplog):
     master_exec.expect = [
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': 'ham', 'ip': '10.0.1.1', 'status': 'ZS'}), ''),
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': 'ham', 'ip': '10.0.1.1', 'status': 'ZS'}), '')]
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': 'ham', 'ip': '10.0.1.1', 'status': 'ZS'}), b''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': 'ham', 'ip': '10.0.1.1', 'status': 'ZS'}), b'')]
     ctrl(['./bin/ploy', 'status', 'warden'])
     assert master_exec.expect == []
     assert master_exec.got == []
@@ -261,8 +262,8 @@ def test_master_status_additional_jail(ctrl, ezjail_name, master_exec, caplog, p
         'ip = 10.0.0.2'])
     ployconf.fill(lines)
     master_exec.expect = [
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), ''),
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), '')]
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), b''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': '10.0.0.1', 'status': 'ZS'}), b'')]
     ctrl(['./bin/ploy', 'status', 'warden'])
     assert master_exec.expect == []
     assert master_exec.got == []
@@ -278,8 +279,8 @@ def test_master_status_multi_ip(ctrl, ezjail_name, master_exec, caplog, ployconf
         'ip = 10.0.0.2'])
     ployconf.fill(lines)
     master_exec.expect = [
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': ['10.0.0.1', 'vtnet0|2a03:b0c0:3:d0::3a4d:c002'], 'status': 'ZS'}), ''),
-        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': ['10.0.0.1', 'vtnet0|2a03:b0c0:3:d0::3a4d:c002'], 'status': 'ZS'}), '')]
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': ['10.0.0.1', 'vtnet0|2a03:b0c0:3:d0::3a4d:c002'], 'status': 'ZS'}), b''),
+        ('/usr/local/bin/ezjail-admin list', 0, ezjail_list({'name': ezjail_name, 'ip': ['10.0.0.1', 'vtnet0|2a03:b0c0:3:d0::3a4d:c002'], 'status': 'ZS'}), b'')]
     ctrl(['./bin/ploy', 'status', 'warden'])
     assert master_exec.expect == []
     assert master_exec.got == []

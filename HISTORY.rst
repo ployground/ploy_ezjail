@@ -1,9 +1,62 @@
 Changelog
 =========
 
-1.5.2 - Unreleased
-------------------
+2.0.0b5 - Unreleased
+--------------------
 
+* Dropped support for Python 3.6.
+  [fschulze]
+
+* Added support for Python 3.10.
+  [fschulze]
+
+* Add ``rc_before`` option.
+  [fschulze]
+
+* Add support for jail specific settings.
+  [fschulze]
+
+* Add ``ezjail-use-one-prefix`` option.
+  [fschulze]
+
+* Renamed ``flavour`` option to ``ezjail-flavour``.
+  The old one still works, but will be deprecated in the future.
+  [fschulze]
+
+
+2.0.0b4 - 2021-07-16
+--------------------
+
+* Fix Python 3.x encoding errors when reporting errors from ezjail commands.
+  [fschulze]
+
+* Use full instance name for logging in ``init_ssh_key`` for easier debugging
+  in case of multiple masters.
+  [fschulze]
+
+
+2.0.0b3 - 2020-05-13
+--------------------
+
+* Fix ZFS sections for Python 3.
+  [fschulze]
+
+
+2.0.0b2 - 2019-06-09
+--------------------
+
+* Some Python 3.x encoding related fixes.
+  [fschulze]
+
+* Drop Python 3.4 support.
+  [fschulze]
+
+
+2.0.0b1 - 2018-02-07
+--------------------
+
+* Support for ploy 2.0.0.
+  [fschulze]
 
 
 1.5.1 - 2018-02-03
